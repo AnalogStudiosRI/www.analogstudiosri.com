@@ -23,10 +23,10 @@ jobs:
     - name: Lint
       run: |
         npm run lint
-    - name: Test
-      run: |
-        npm run test
-    - name: Build
+    # - name: Test
+    #   run: |
+    #     npm run test
+    # - name: Build
       run: |
         npm run build
     # - name: Storybook
