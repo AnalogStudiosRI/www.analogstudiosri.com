@@ -1,6 +1,8 @@
-import type { Config, RollupPlugin } from '@greenwood/cli';
+import { greenwoodPluginCssModules } from '@greenwood/plugin-css-modules';
+import { greenwoodPluginImportJsx } from '@greenwood/plugin-import-jsx';
 import analyze from 'rollup-plugin-analyzer';
 import { visualizer } from 'rollup-plugin-visualizer';
+import type { Config, RollupPlugin } from '@greenwood/cli';
 
 const customRollupPlugins: RollupPlugin[] = [
   {
@@ -40,6 +42,8 @@ const config: Config = {
     importAttributes: ['css']
   },
   plugins: [
+    greenwoodPluginCssModules(),
+    greenwoodPluginImportJsx(),
     ...customRollupPlugins
   ]
 }
