@@ -26,7 +26,7 @@ jobs:
     # - name: Test
     #   run: |
     #     npm run test
-    # - name: Build
+    - name: Build
       run: |
         npm run build
     # - name: Storybook
