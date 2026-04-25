@@ -22,7 +22,7 @@
   "scripts": {
     "lint": "eslint && ls-lint \"./src/**/*.js\" && stylelint \"./src/**/*.css\" && tsc",
     "dev": "greenwood develop",
-    "build": "greenwood build",
+    "build": "NODE_OPTIONS='--import @greenwood/cli/register' greenwood build",
     "serve": "greenwood serve",
     "test": "wtr",
     "test:tdd": "npm run test --watch",

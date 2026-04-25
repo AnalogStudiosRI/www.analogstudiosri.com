@@ -8,9 +8,11 @@ interface StaticPaths {
     id: number;
   }
 }
+
 interface StaticParams {
   artist: Artist
 }
+
 interface PageProps {
   params: {
     artist: Artist;
@@ -35,6 +37,7 @@ export async function getStaticParams({ params }: StaticPaths): Promise<StaticPa
 
   return { artist };
 }
+
 export default class ArtistDetailsPage extends HTMLElement {
   #artist: Artist;
 

@@ -8,9 +8,11 @@ interface StaticPaths {
     id: number;
   }
 }
+
 interface StaticParams {
   album: Album
 }
+
 interface PageProps {
   params: {
     album: Album;
@@ -35,6 +37,7 @@ export async function getStaticParams({ params }: StaticPaths): Promise<StaticPa
 
   return { album };
 }
+
 export default class AlbumDetailsPage extends HTMLElement {
   #album: Album;
 
