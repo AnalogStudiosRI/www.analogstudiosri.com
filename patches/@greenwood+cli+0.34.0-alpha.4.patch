@@ -15,7 +15,7 @@ index 4c8a211..970bc06 100644
      const servers = [
        ...compilation.config.plugins
 diff --git a/node_modules/@greenwood/cli/src/lib/execute-route-module.js b/node_modules/@greenwood/cli/src/lib/execute-route-module.js
-index a7367ac..5128493 100644
+index a7367ac..dd2e97d 100644
 --- a/node_modules/@greenwood/cli/src/lib/execute-route-module.js
 +++ b/node_modules/@greenwood/cli/src/lib/execute-route-module.js
 @@ -16,6 +16,8 @@ async function executeRouteModule({
@@ -36,7 +36,7 @@ index a7367ac..5128493 100644
      const {
        prerender = false,
        getLayout = null,
-@@ -34,6 +36,48 @@ async function executeRouteModule({
+@@ -34,6 +36,47 @@ async function executeRouteModule({
        isolation,
      } = module;
  
@@ -57,14 +57,13 @@ index a7367ac..5128493 100644
 +        console.log(staticPaths[0]);
 +
 +        if (page.hasStaticParams) {
-+          // TODO: does name have to come from the key?  I don't think it should be hardcoded here, no?
 +          console.log(
 +            "has static props?",
-+            staticPaths.find((path) => path.params.name === params.name),
++            staticPaths.find((staticPath) => staticPath.params[page.segment.key] === params[page.segment.key]),
 +          );
 +          const initParams = {
 +            ...params,
-+            ...staticPaths.find((path) => path.params.name === params.name),
++            ...staticPaths.find((staticPath) => staticPath.params[page.segment.key] === params[page.segment.key]),
 +          };
 +          console.log({ initParams });
 +
