@@ -17,9 +17,11 @@ function modelAlbum(album: Album) {
   return {
     imagePath: album ? album.imageUrl : '',
     headingText: album ? album.title : '',
-    bodyText: album ? album.description : '',
+    // TODO: make content from APIs work
+    // bodyText: album ? album.description : '',
+    bodyText: album ? lorum : '',
     imageAltText: album ? album.title : '',
-    link: album ? `/albums/${album.title.toLowerCase()}` : '#'
+    link: album ? `/albums/${album.title.toLowerCase()}/` : '#'
   };
 }
 

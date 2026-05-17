@@ -3,7 +3,6 @@
 }
 
 .as-route-artist-details {
-
   & img {
     max-width: var(--img-width-mobile);
   }
