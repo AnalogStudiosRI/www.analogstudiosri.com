@@ -1,5 +1,9 @@
+import { modelAlbum } from '#components/card/card.tsx';
 import { getAlbums, getAlbumById } from '#services/albums.ts';
 import type { Album } from '#services/albums.ts';
+// TODO: import alias (#) does not seem to work here with WCC
+// import '#components/card/card.tsx';
+import "../../components/card/card.tsx";
 
 // TODO: types for all this from Greenwood: StaticPaths / Params / SSR page / etc?  can they be inferred?
 interface StaticPaths {
@@ -46,15 +50,46 @@ export default class AlbumDetailsPage extends HTMLElement {
     this.#album = params?.album;
   }
 
+  static getDownloadLink(album: Album): string {
+    if (album.downloadUrl) {
+      return `
+        <a class="download-url as-link" href="${album.downloadUrl}" rel="noopener noreferrer">Download Link</a>
+      `;
+    }
+    return '';
+  }
+
+  // TODO: social share component
   connectedCallback() {
+    const formattedTitle = `${this.#album.title} (${this.#album.year})`;
+    // don't need links on details pages
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { link, ...rest } = modelAlbum(this.#album);
+
     this.innerHTML = `
       <body>
-        <a href="/">&lt; Back</a>
-        <hr/>
-        <h1>${this.#album.title}</h1>
-        <p><i>${this.#album.description}</i></p>
-        <hr/>
-        <pre>${JSON.stringify(this.#album)}</pre>
+        <div class="container-flex as-routes-album-details">
+          <div class="row">
+
+            <div class="col-xs-4 hidden-sm-down">
+              <as-social-share></as-social-share>
+            </div>
+
+            <div class="col-xs-6">
+              <div class="card-row hidden-sm-down">
+                ${AlbumDetailsPage.getDownloadLink(this.#album)}
+                <as-card details='${JSON.stringify(rest)}'></as-card>
+              </div>
+
+              <div class="card-row hidden-md-up">
+                <h4>${formattedTitle}</h4>
+                <img src="${this.#album.imageUrl}" alt="${formattedTitle}"/>
+                <p>${this.#album.description}</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </body>
     `;
   }
