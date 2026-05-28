@@ -37,6 +37,7 @@ const config: Config = {
       '/api': 'https://www.analogstudios.net'
     }
   },
+  prerender: true,
   polyfills: {
     importAttributes: ['css']
   },
