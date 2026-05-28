@@ -53,18 +53,21 @@ export default class SocialShare extends HTMLElement {
   }
 
   connectedCallback() {
-    if(!this.shadowRoot) {
+    if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
     
-    this.render();
-    defineCustomElement();
-    this.shadowRoot?.adoptedStyleSheets.push(themeSheet, socialShareSheet);
-    this.shadowRoot?.querySelector('.wss')?.addEventListener('closed', () => {
-      this.toggleShowSocialShare();
-    });
+    // TODO: temp workaround for https://github.com/AnalogStudiosRI/www.analogstudios.net/pull/112#issuecomment-4564633209
+    if(typeof window !== 'undefined') {
+      this.render();
+      defineCustomElement();
+
+      this?.shadowRoot?.adoptedStyleSheets?.push(themeSheet, socialShareSheet);
+      this?.shadowRoot?.querySelector('.wss')?.addEventListener('closed', () => {
+        this?.toggleShowSocialShare();
+      });
+    }
   }
-  
 
   // TODO: social sharing config is not working / showing icons
   // TODO: social share styles are off

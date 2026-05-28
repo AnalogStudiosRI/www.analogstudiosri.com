@@ -32,7 +32,6 @@ const customRollupPlugins: RollupPlugin[] = [
 ]
 
 const config: Config = {
-  useTsc: true,
   devServer: {
     proxy: {
       '/api': 'https://www.analogstudios.net'
