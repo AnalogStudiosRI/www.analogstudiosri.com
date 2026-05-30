@@ -59,7 +59,6 @@ export default class AlbumDetailsPage extends HTMLElement {
     return '';
   }
 
-  // TODO: social share component
   connectedCallback() {
     const formattedTitle = `${this.#album.title} (${this.#album.year})`;
     // don't need links on details pages

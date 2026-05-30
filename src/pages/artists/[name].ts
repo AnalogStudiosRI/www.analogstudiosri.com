@@ -1,5 +1,11 @@
+import { modelArtist, modelAlbum } from '#components/card/card.tsx';
+import { getAlbumsByArtistId } from '#services/albums.ts';
 import { getArtists, getArtistById } from '#services/artists.ts';
 import type { Artist } from '#services/artists.ts';
+import type { Album } from '#services/albums.ts';
+// TODO: import alias (#) does not seem to work here with WCC
+// import '#components/card/card.tsx';
+import "../../components/card/card.tsx";
 
 // TODO: types for all this from Greenwood: StaticPaths / Params / SSR page / etc?  can they be inferred?
 interface StaticPaths {
@@ -10,12 +16,14 @@ interface StaticPaths {
 }
 
 interface StaticParams {
-  artist: Artist
+  artist: Artist;
+  albums: Album[];
 }
 
 interface PageProps {
   params: {
     artist: Artist;
+    albums: Album[];
   }
 }
 
@@ -34,27 +42,67 @@ export async function getStaticPaths(): Promise<StaticPaths[]> {
 
 export async function getStaticParams({ params }: StaticPaths): Promise<StaticParams> {
   const artist = await getArtistById(params.id);
+  const albums = await getAlbumsByArtistId(artist.id); // this.albums = await getAlbumsByArtistId(parseInt(this.id, 10))
 
-  return { artist };
+  return { artist, albums };
 }
 
 export default class ArtistDetailsPage extends HTMLElement {
   #artist: Artist;
+  #albums: Album[] = [];
 
   constructor({ params }: PageProps) {
     super();
     this.#artist = params?.artist;
+    this.#albums = params.albums;
+  }
+
+  #getAlbumsForArtist() {
+    if (this.#albums?.length === 0) {
+      return '';
+    } else {
+      return `
+        <h2>Albums by ${this.#artist.name}</h2>
+
+        ${
+          this.#albums.map((album: Album) => {
+            return `<as-card details='${JSON.stringify(modelAlbum(album))}'></as-card>`;
+          }).join('\n')
+        }
+      `;
+    }
   }
 
   connectedCallback() {
+    // don't need links on details pages
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { link, ...rest } = modelArtist(this.#artist);
+
     this.innerHTML = `
       <body>
-        <a href="/">&lt; Back</a>
-        <hr/>
-        <h2>${this.#artist.name}</h2>
-        <p><i>${this.#artist.bio}</i></p>
-        <hr/>
-        <pre>${JSON.stringify(this.#artist)}</pre>
+        <div class="container-flex as-route-artist-details">
+          <div class="row">
+
+            <div class="col-xs-4 hidden-sm-down">
+              <as-social-share></as-social-share>
+            </div>
+
+            <div class="col-xs-6">
+
+              <div class="card-row hidden-sm-down">
+                <as-card details='${JSON.stringify(rest)}'></as-card>
+              </div>
+
+              <div class="card-row hidden-md-up">
+                <h4>${this.#artist.name}</h4>
+                <img src="${this.#artist.imageUrl}" alt="${this.#artist.name}"/>
+                <p>${this.#artist.bio}</p>
+              </div>
+
+              ${this.#getAlbumsForArtist()}
+            </div>
+          </div>
+        </div>
       </body>
     `;
   }
