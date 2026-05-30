@@ -25,7 +25,7 @@ interface ShareConfig {
 }
 
 export default class SocialShare extends HTMLElement {
-  // TODO: use a signal for show?
+  // TODO: use a signal for show / hide?
   #show: boolean = false;
   #shareConfig: ShareConfig;
 
@@ -78,14 +78,12 @@ export default class SocialShare extends HTMLElement {
         // https://github.com/peterpeterparker/web-social-share/issues/65
         shareElement.share = this.#shareConfig;
         shareElement.addEventListener('closed', () => {
-          this?.toggleShowSocialShare();
+          this.#show = false;
         });
       }, 1000);
     }
   }
 
-  // TODO: social sharing config is not working / showing icons
-  // TODO: social share styles are off
   toggleShowSocialShare() {
     this.#show = !this.#show;
     this.shadowRoot?.querySelector('web-social-share')?.setAttribute('show', this.#show ? 'true' : '');
