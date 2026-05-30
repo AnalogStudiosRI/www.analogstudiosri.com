@@ -56,16 +56,31 @@ export default class SocialShare extends HTMLElement {
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
-    
+
+    this?.shadowRoot?.adoptedStyleSheets?.push(themeSheet, socialShareSheet);
+    this.render();
+
     // TODO: temp workaround for https://github.com/AnalogStudiosRI/www.analogstudios.net/pull/112#issuecomment-4564633209
     if(typeof window !== 'undefined') {
-      this.render();
       defineCustomElement();
+    
+      // TODO: how to best detect when the web-social-share component is ready to be interacted with
+      // is there an event we can listen for instead of using a timeout?
+      setTimeout(() => {
+        const shareElement = this.shadowRoot?.querySelector('web-social-share');
 
-      this?.shadowRoot?.adoptedStyleSheets?.push(themeSheet, socialShareSheet);
-      this?.shadowRoot?.querySelector('.wss')?.addEventListener('closed', () => {
-        this?.toggleShowSocialShare();
-      });
+        if (!shareElement) {
+          console.error('Share element not found');
+          return;
+        }
+
+        // have to set the property here instead of an attribute
+        // https://github.com/peterpeterparker/web-social-share/issues/65
+        shareElement.share = this.#shareConfig;
+        shareElement.addEventListener('closed', () => {
+          this?.toggleShowSocialShare();
+        });
+      }, 1000);
     }
   }
 
@@ -73,10 +88,7 @@ export default class SocialShare extends HTMLElement {
   // TODO: social share styles are off
   toggleShowSocialShare() {
     this.#show = !this.#show;
-    console.log('show', this.#show);
-    console.log('share config', this.#shareConfig);
-    this.shadowRoot?.querySelector('.wss')?.setAttribute('share', JSON.stringify(this.#shareConfig));
-    this.shadowRoot?.querySelector('.wss')?.setAttribute('show', String(this.#show));
+    this.shadowRoot?.querySelector('web-social-share')?.setAttribute('show', this.#show ? 'true' : '');
   }
 
   render() {
@@ -92,7 +104,7 @@ export default class SocialShare extends HTMLElement {
             SHARE THIS PAGE
           </button>
 
-          <web-social-share class="wss">
+          <web-social-share>
             <i class="fa fa-facebook" slot="facebook"></i>
             <i class="fa fa-twitter" slot="twitter"></i>
             <i class="fa fa-pinterest" slot="pinterest"></i>
