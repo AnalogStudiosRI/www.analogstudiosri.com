@@ -1,9 +1,8 @@
 // TODO: page load hangs if we use import aliases (e.g. #)
 import { getEvents } from '../../services/events.ts';
 import eventsCalendarSheet from './events-calendar.css' with { type: 'css' };
-// TODO: these are failing to load in the browser?!
-// import eventsSheet from '../../events.css' with { type: 'css' };
-// import themeSheet from '../../theme.css' with { type: 'css' };
+import eventsSheet from '../../styles/events.css' with { type: 'css' };
+import themeSheet from '../../styles/theme.css' with { type: 'css' };
 import type { Event } from '#services/events.ts';
 
 interface Day {
@@ -47,6 +46,7 @@ export class EventsCalendarComponent extends HTMLElement {
   async connectedCallback() {
     const events = await getEvents();
     console.log('events', events);
+    // TODO: clean up test event data
     this.#events = [...events, {
       id: 999,
       title: 'Test Event',
@@ -60,8 +60,7 @@ export class EventsCalendarComponent extends HTMLElement {
       this.attachShadow({ mode: 'open' });
     }
 
-    // themeSheet, eventsSheet,
-    this?.shadowRoot?.adoptedStyleSheets?.push(eventsCalendarSheet);
+    this?.shadowRoot?.adoptedStyleSheets?.push(themeSheet, eventsSheet, eventsCalendarSheet);
     this.#calculateCurrentMonthData();
     this.render();
   }
@@ -139,12 +138,16 @@ export class EventsCalendarComponent extends HTMLElement {
     return this.#CALENDAR[this.#currentMonthIndex].NAME + ' ' + this.#currentYear;
   }
 
-  #shiftToPreviousMonth(): void {
+  // TODO: private methods are not supported by WCC <> JSX event handlers
+  shiftToPreviousMonth(): void {
     this.#calculatePreviousMonth();
+    this.render();
   }
 
-  #shiftToNextMonth(): void {
+  // TODO: private methods are not supported by WCC <> JSX event handlers
+  shiftToNextMonth(): void {
     this.#calculateNextMonth();
+    this.render();
   }
 
   render() {
@@ -188,21 +191,22 @@ export class EventsCalendarComponent extends HTMLElement {
         </div>
       `;
     }).join('');
+    const headerText = this.#getHeaderText();
 
     return (
       <div class="as-events-calendar">
         <div class="as-events-calendar__header">
           {/* TODO: */ }
           {/* @ts-expect-error index type raises a TS error */}
-          <button type="button" class="btn btn-default btn-sm as-events-calendar__btn" onclick={this.#shiftToPreviousMonth} tabindex="-1" aria-label="goto previous month">
+          <button type="button" class="btn btn-default btn-sm as-events-calendar__btn" onclick={this.shiftToPreviousMonth} tabindex="-1" aria-label="goto previous month">
             <i class="fa fa-arrow-left"></i>
           </button>
 
-          <h3 class="as-events-calendar__header-text">Event Calendar<br/><span class="as-events-calendar__month">{this.#getHeaderText()}</span></h3>
+          <h3 class="as-events-calendar__header-text">Event Calendar<br/><span class="as-events-calendar__month">{headerText}</span></h3>
           
           {/* TODO: */ }
           {/* @ts-expect-error index type raises a TS error */}
-          <button type="button" class="btn btn-default btn-sm as-events-calendar__btn" onclick={this.#shiftToNextMonth} tabindex="-1" aria-label="goto next month">
+          <button type="button" class="btn btn-default btn-sm as-events-calendar__btn" onclick={this.shiftToNextMonth} tabindex="-1" aria-label="goto next month">
             <i class="fa fa-arrow-right"></i>
           </button>
         </div>
