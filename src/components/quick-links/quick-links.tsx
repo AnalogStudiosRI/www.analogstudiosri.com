@@ -2,24 +2,23 @@ declare global {
   namespace JSX {
     interface IntrinsicElements {
       'as-quick-links': {
-        options: Option[]
+        links: Link[]
       };
     }
   }
 }
 
-interface Option {
-  id: string,
-  value: string,
+interface Link {
   route: string,
+  label: string,
 }
 
 // TODO: would be nice to do this without JavaScript
 export default class QuickLinks extends HTMLElement {
-  options: Option[] = [];
+  links: Link[] = [];
 
   connectedCallback() {
-    this.options = JSON.parse(this.getAttribute('options') ?? '[]');
+    this.links = JSON.parse(this.getAttribute('links') ?? '[]');
 
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
@@ -29,17 +28,19 @@ export default class QuickLinks extends HTMLElement {
 
   // TODO: figure out why this is not working and enable the feature
   selectOption(event: Event) {
-    console.log('selected link', event);
-    // const selectedLink = this.options.find(link => link.id === (event.target as HTMLSelectElement).value);
-    // if (selectedLink) {
-    //   window.location.href = `${this.baseRoute}/${selectedLink.id}/`;
-    // }
+    const selectedLink = this.links.find(link => link.route === (event.target as HTMLSelectElement).value);
+
+    if (selectedLink) {
+      window.location.href = selectedLink.route;
+    } else {
+      console.warn('Selected option does not have a corresponding link:', (event.target as HTMLSelectElement).value);
+    }
   }
 
   render() {
-    const { options } = this;
-    const optionsListHtml = [{ id: "default", value: "Select Option" }, ...options].map(link => {
-      return `<option value="${link.id}">${link.value}</option>`;
+    const { links } = this;
+    const optionsListHtml = [{ route: "default", label: "Select Option" }, ...links].map(link => {
+      return `<option value="${link.route}">${link.label}</option>`;
     }).join('\n');
 
     return (

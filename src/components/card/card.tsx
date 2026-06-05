@@ -1,5 +1,6 @@
 import type { Artist } from '#services/artists.ts';
 import type { Album } from '#services/albums.ts';
+import { slugifyer } from '#services/util.ts';
 // TODO: CSS Module Scripts do not work with SSR pages
 
 const lorum = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis tempor commodo dictum. Donec interdum finibus congue. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Integer id accumsan ante. Suspendisse potenti. Nulla facilisi. Nullam mattis erat lectus, condimentum facilisis erat posuere sed. Maecenas quis lacinia lorem.`;
@@ -21,7 +22,7 @@ function modelAlbum(album: Album) {
     // bodyText: album ? album.description : '',
     bodyText: album ? lorum : '',
     imageAltText: album ? album.title : '',
-    link: album ? `/albums/${album.title.toLowerCase()}/` : '#'
+    link: album ? `/albums/${slugifyer(album.title)}/` : '#'
   };
 }
 
@@ -33,7 +34,7 @@ function modelArtist(artist: Artist) {
     // bodyText: artist ? artist.bio : '',
     bodyText: artist ? lorum : '',
     imageAltText: artist ? artist.name : '',
-    link: artist ? `/artists/${artist.name.toLowerCase()}/` : '#'
+    link: artist ? `/artists/${slugifyer(artist.name)}/` : '#'
   };
 }
 

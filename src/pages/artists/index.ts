@@ -1,5 +1,6 @@
 import { getArtists } from "#services/artists.ts";
 import { modelArtist } from "#components/card/card.tsx";
+import { slugifyer } from "#services/util.ts";
 // TODO: import alias (#) does not seem to work here with WCC
 // import '#components/card/card.tsx';
 import "../../components/card/card.tsx";
@@ -26,7 +27,7 @@ export default class ArtistsPage extends HTMLElement {
             <div class="hidden-sm-down col-xs-3">
               <p>Quick Links</p>
               <as-quick-links
-                options='${JSON.stringify(artists.map(artist => ({ value: artist.name, id: artist.id })))}'
+                links='${JSON.stringify(artists.map(artist => ({ route: `/artists/${slugifyer(artist.name)}/`, label: artist.name })))}'
               ></as-quick-links>
             </div>
 

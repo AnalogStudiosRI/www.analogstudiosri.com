@@ -1,4 +1,5 @@
 import { modelAlbum } from '#components/card/card.tsx';
+import { slugifyer } from '#services/util.ts';
 import { getAlbums, getAlbumById } from '#services/albums.ts';
 import type { Album } from '#services/albums.ts';
 // TODO: import alias (#) does not seem to work here with WCC
@@ -29,7 +30,7 @@ export async function getStaticPaths(): Promise<StaticPaths[]> {
   return albums.map(album => {
     return {
       params: {
-        name: album.title.toLowerCase().replace(/ /g, '-'),
+        name: slugifyer(album.title),
         id: album.id,
       }
     }
