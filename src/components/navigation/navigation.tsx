@@ -14,6 +14,7 @@ export default class Navigation extends HTMLElement {
     this.render();
   }
 
+  // TODO: get navigation from a content collection
   render() {
     return (
       <nav>
