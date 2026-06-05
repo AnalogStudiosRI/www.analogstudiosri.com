@@ -4,7 +4,8 @@ interface Event {
   description: string,
   startTime: number,
   endTime: number,
-  createdTime: string
+  createdTime: string,
+  tags?: string[]
 }
 
 const EVENTS_API_URL = '/api/events';

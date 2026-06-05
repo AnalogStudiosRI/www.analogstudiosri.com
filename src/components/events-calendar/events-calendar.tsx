@@ -3,6 +3,7 @@ import { getEvents } from '../../services/events.ts';
 import eventsCalendarSheet from './events-calendar.css' with { type: 'css' };
 import eventsSheet from '../../styles/events.css' with { type: 'css' };
 import themeSheet from '../../styles/theme.css' with { type: 'css' };
+import { slugifyer } from '../../services/util.ts';
 import type { Event } from '#services/events.ts';
 
 interface Day {
@@ -45,15 +46,16 @@ export class EventsCalendarComponent extends HTMLElement {
 
   async connectedCallback() {
     const events = await getEvents();
-    console.log('events', events);
+
     // TODO: clean up test event data
     this.#events = [...events, {
-      id: 999,
+      id: 82,
       title: 'Test Event',
-      description: 'This is a test event.',
+      description: "\u003Cp\u003EBlissRI is back again for a two-day event!  We will be live-streaming the event so if you can&#39;t make it down, check out the live stream on \u003Ca href=\"https://www.youtube.com/watch?v=Pkzw1C17Eag\"\u003EYouTube\u003C/a\u003E or \u003Ca href=\"https://www.facebook.com/events/747593301143608/\"\u003EFacebook\u003C/a\u003E.\u003C/p\u003E\u003Cimg src=\"//images.ctfassets.net/kpfxkjvd7pox/1YFY5EZvqgWlaLafANbZEs/ece5d39a0f578a4f2f690663e504e32d/bliss-2025.jpg\" loading=\"lazy\"/\u003E\u003Cp\u003E\u003C/p\u003E",
       startTime: Math.floor(new Date().getTime() / 1000),
       endTime: Math.floor(new Date().getTime() / 1000) + 3600,
-      createdTime: new Date().toISOString()
+      createdTime: new Date().toISOString(),
+      tags: []
     }];
 
     if(!this.shadowRoot) {
@@ -151,8 +153,6 @@ export class EventsCalendarComponent extends HTMLElement {
   }
 
   render() {
-    // TODO: slugify (use title for) events links
-    console.log('current month data', this.#currentMonthData);
     const html = this.#currentMonthData.map((week) => {
       return `
         <div class="as-events-calendar__week">
@@ -166,7 +166,7 @@ export class EventsCalendarComponent extends HTMLElement {
                 ? day.events.map((event) => {
                   return `
                     <span class="as-events-calendar__day-event">
-                      <a class="as-events-calendar__day-event" href="/events/${event.id}" title="${event.title}">
+                      <a class="as-events-calendar__day-event" href="/events/${slugifyer(event.title)}/" title="${event.title}">
                         <i class="fa fa-calendar-check-o"></i>
                       </a>
                     </span>
