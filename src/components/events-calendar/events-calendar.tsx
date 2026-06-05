@@ -221,7 +221,7 @@ export class EventsCalendarComponent extends HTMLElement {
           <div class="as-events-calendar__day-name">Sat</div>
         </div>
 
-        ${html}
+        {html}
       </div>
     )
   }
