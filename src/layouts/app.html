@@ -6,10 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="icon" href="/favicon.ico" />
+    <!-- TODO: refactor styles away from bootstrap -->
     <link rel="stylesheet" href="../styles/theme.css"></link>
     <!-- TODO: this one is global to provide support with mixing classname for legacy CSS -->
     <link rel="stylesheet" href="../components/card/card.css"></link>
-    <!-- TODO: make pages CSS more idiomatic-->
+    <!-- TODO:move page specific styles to individual layout files -->
     <link rel="stylesheet" href="../styles/albums.css"></link>
     <link rel="stylesheet" href="../styles/artists.css"></link>
     <script type="module" src="../components/header/header.tsx"></script>
@@ -30,7 +31,7 @@
         <output for="page"></output>
       </main>
 
-      <app-footer></app-footer>
+      <as-footer></as-footer>
     </div>
   </body>
 </html>
