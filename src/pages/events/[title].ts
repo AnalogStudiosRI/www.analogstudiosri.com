@@ -7,7 +7,7 @@ interface Props {
   }
 }
 
-export default class EventDetailPage extends HTMLElement {
+export default class EventDetailsPage extends HTMLElement {
   #MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   #DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   #title: string;
@@ -68,3 +68,5 @@ export default class EventDetailPage extends HTMLElement {
     `
   }
 }
+
+export const prerender = false;

@@ -14,8 +14,40 @@ index 4c8a211..970bc06 100644
      // start any of the user's server plugins if needed
      const servers = [
        ...compilation.config.plugins
+diff --git a/node_modules/@greenwood/cli/src/commands/serve.js b/node_modules/@greenwood/cli/src/commands/serve.js
+index 6fa0a08..7a9f741 100644
+--- a/node_modules/@greenwood/cli/src/commands/serve.js
++++ b/node_modules/@greenwood/cli/src/commands/serve.js
+@@ -5,9 +5,25 @@ const runProdServer = async (compilation) => {
+   const { basePath, port } = compilation.config;
+   const postfixSlash = basePath === "" ? "" : "/";
+   const hasApisDir = await checkResourceExists(compilation.context.apisDir);
+-  const hasDynamicRoutes = compilation.graph.find((page) => page.isSSR && !page.prerender);
++  // const hasDynamicRoutes = compilation.graph.find((page) => page.isSSR && !page.prerender && !page.staticPaths);
++  // const hasDynamicRoutes = compilation.graph.find(
++    
++  //   (page) => page.isSSR && !page.staticPaths && (page.prerender !== true || (!compilation.config.prerender && page.prerender !== false))
++  // );
++  const hasDynamicRoutes = compilation.graph.find(
++    (page) => {
++      let is = page.isSSR && !page.staticPaths && page.prerender !== true;
++
++      if(is && (compilation.config.prerender && page.prerender !== false)) {
++        is = false;
++      }
++
++      return is;
++    }
++  );
++  console.log("*****", { hasDynamicRoutes, hasApisDir, prerender: compilation.config.prerender });
+   const server =
+-    (hasDynamicRoutes && !compilation.config.prerender) || hasApisDir
++    hasDynamicRoutes || hasApisDir
+       ? getHybridServer
+       : getStaticServer;
+ 
 diff --git a/node_modules/@greenwood/cli/src/lib/execute-route-module.js b/node_modules/@greenwood/cli/src/lib/execute-route-module.js
-index a7367ac..dd2e97d 100644
+index a7367ac..62ff974 100644
 --- a/node_modules/@greenwood/cli/src/lib/execute-route-module.js
 +++ b/node_modules/@greenwood/cli/src/lib/execute-route-module.js
 @@ -16,6 +16,8 @@ async function executeRouteModule({
@@ -27,16 +59,18 @@ index a7367ac..dd2e97d 100644
    };
  
    if (prerender) {
-@@ -25,7 +27,7 @@ async function executeRouteModule({
+@@ -25,15 +27,59 @@ async function executeRouteModule({
      data.html = html;
    } else {
      const module = await import(moduleUrl).then((module) => module);
 -    const { body, layout, frontmatter } = contentOptions;
 +    const { body, layout, frontmatter, statics } = contentOptions;
      const {
-       prerender = false,
+-      prerender = false,
++      prerender = null,
        getLayout = null,
-@@ -34,6 +36,47 @@ async function executeRouteModule({
+       getBody = null,
+       getFrontmatter = null,
        isolation,
      } = module;
  
@@ -48,22 +82,26 @@ index a7367ac..dd2e97d 100644
 +      data.hasStaticParams = true;
 +    }
 +
-+    console.log("executeRouteModule", { params, page });
++    // console.log("executeRouteModule", { params, page });
 +    if (params) {
 +      if (page.staticPaths) {
 +        const staticPaths = page.staticPaths ?? [];
 +
-+        console.log({ staticPaths });
-+        console.log(staticPaths[0]);
++        // console.log({ staticPaths });
++        // console.log(staticPaths[0]);
 +
 +        if (page.hasStaticParams) {
-+          console.log(
-+            "has static props?",
-+            staticPaths.find((staticPath) => staticPath.params[page.segment.key] === params[page.segment.key]),
-+          );
++          // console.log(
++          //   "has static props?",
++          //   staticPaths.find(
++          //     (staticPath) => staticPath.params[page.segment.key] === params[page.segment.key],
++          //   ),
++          // );
 +          const initParams = {
 +            ...params,
-+            ...staticPaths.find((staticPath) => staticPath.params[page.segment.key] === params[page.segment.key]),
++            ...staticPaths.find(
++              (staticPath) => staticPath.params[page.segment.key] === params[page.segment.key],
++            ),
 +          };
 +          console.log({ initParams });
 +
@@ -77,27 +115,60 @@ index a7367ac..dd2e97d 100644
 +          };
 +        }
 +      }
++      // console.log("final params", { params });
 +    }
-+
-+    console.log("final params", { params });
 +
      if (body) {
        if (module.default) {
          const { html } = await renderToString(new URL(moduleUrl), false, {
+diff --git a/node_modules/@greenwood/cli/src/lib/url-utils.js b/node_modules/@greenwood/cli/src/lib/url-utils.js
+index a7cbe7e..06ea771 100644
+--- a/node_modules/@greenwood/cli/src/lib/url-utils.js
++++ b/node_modules/@greenwood/cli/src/lib/url-utils.js
+@@ -34,7 +34,7 @@ function getMatchingDynamicSsrRoute(graph, pathname) {
+ 
+ function getParamsFromSegment(segment, pathname) {
+   return new URLPattern({ pathname: segment.pathname }).exec(`https://example.com${pathname}`)
+-    .pathname.groups;
++    ?.pathname?.groups;
+ }
+ 
+ export {
 diff --git a/node_modules/@greenwood/cli/src/lifecycles/bundle.js b/node_modules/@greenwood/cli/src/lifecycles/bundle.js
-index f10bd74..01f4704 100644
+index f10bd74..065852f 100644
 --- a/node_modules/@greenwood/cli/src/lifecycles/bundle.js
 +++ b/node_modules/@greenwood/cli/src/lifecycles/bundle.js
-@@ -118,38 +118,89 @@ async function optimizeStaticPages(compilation, plugins) {
+@@ -116,40 +116,108 @@ async function cleanUpResources(compilation) {
+ async function optimizeStaticPages(compilation, plugins) {
+   const { scratchDir, outputDir } = compilation.context;
  
++  //   let is = page.isSSR && !page.staticPaths && page.prerender !== true;
++
++  // if(is && (config.prerender && page.prerender !== false)) {
++  //   is = false;
++  // }
++
++  // return is;
    const pages = compilation.graph.filter(
-     (page) =>
+-    (page) =>
 -      !page.isSSR || (page.isSSR && page.prerender) || (page.isSSR && compilation.config.prerender),
-+      !page.isSSR ||
-+      (page.isSSR && page.prerender) ||
-+      (page.isSSR && compilation.config.prerender) ||
-+      page.staticPaths,
-   );
+-  );
++    (page) => {
++      console.log({ page })
++      let is = !page.isSSR || page.staticPaths || page.prerender === true;
++
++      console.log('optimizeStaticPages 111', { is });
++      if(page.isSSR && compilation.config.prerender && page.prerender !== false) {
++        is = true;
++      }
++      console.log('optimizeStaticPages 222', { is });
++      return is;
++      // return !page.isSSR ||
++      //   (page.isSSR && page.prerender === true) ||
++      //   (page.isSSR && ((page.prerender !== false) && compilation.config.prerender)) ||
++      //   page.staticPaths
++  });
++  console.log("@@@@@@@@@ optimizeStaticPages", { pages });
  
    await asyncForEach(pages, async (page) => {
 -    const { route, outputHref } = page;
@@ -144,22 +215,22 @@ index f10bd74..01f4704 100644
 +            recursive: true,
 +          });
 +        }
-+
-+        for (const plugin of plugins) {
-+          if (plugin.shouldOptimize && (await plugin.shouldOptimize(url, response.clone()))) {
-+            const currentResponse = await plugin.optimize(url, response.clone());
  
 -    for (const plugin of plugins) {
 -      if (plugin.shouldOptimize && (await plugin.shouldOptimize(url, response.clone()))) {
 -        const currentResponse = await plugin.optimize(url, response.clone());
++        for (const plugin of plugins) {
++          if (plugin.shouldOptimize && (await plugin.shouldOptimize(url, response.clone()))) {
++            const currentResponse = await plugin.optimize(url, response.clone());
+ 
+-        response = mergeResponse(response.clone(), currentResponse.clone());
 +            response = mergeResponse(response.clone(), currentResponse.clone());
 +          }
 +        }
 +
 +        // clean up optimization markers
 +        const body = (await response.text()).replace(/data-gwd-opt=".*?[a-z]"/g, "");
- 
--        response = mergeResponse(response.clone(), currentResponse.clone());
++
 +        await fs.writeFile(
 +          new URL(outputHref.replace(`[${segment.key}]`, staticPath.params[segment.key])),
 +          body,
@@ -176,9 +247,7 @@ index f10bd74..01f4704 100644
 +      );
 +      const headers = new Headers({ "Content-Type": "text/html" });
 +      let response = new Response(contents, { headers });
- 
--    // clean up optimization markers
--    const body = (await response.text()).replace(/data-gwd-opt=".*?[a-z]"/g, "");
++
 +      if (!(await checkResourceExists(outputDirUrl))) {
 +        await fs.mkdir(outputDirUrl, {
 +          recursive: true,
@@ -188,37 +257,74 @@ index f10bd74..01f4704 100644
 +      for (const plugin of plugins) {
 +        if (plugin.shouldOptimize && (await plugin.shouldOptimize(url, response.clone()))) {
 +          const currentResponse = await plugin.optimize(url, response.clone());
-+
+ 
+-    // clean up optimization markers
+-    const body = (await response.text()).replace(/data-gwd-opt=".*?[a-z]"/g, "");
 +          response = mergeResponse(response.clone(), currentResponse.clone());
 +        }
 +      }
-+
-+      // clean up optimization markers
-+      const body = (await response.text()).replace(/data-gwd-opt=".*?[a-z]"/g, "");
  
 -    await fs.writeFile(new URL(outputHref), body);
++      // clean up optimization markers
++      const body = (await response.text()).replace(/data-gwd-opt=".*?[a-z]"/g, "");
++
 +      await fs.writeFile(new URL(outputHref), body);
 +    }
    });
  }
  
-@@ -280,7 +331,9 @@ async function bundleApiRoutes(compilation) {
+@@ -280,11 +348,31 @@ async function bundleApiRoutes(compilation) {
  
  async function bundleSsrPages(compilation, optimizePlugins) {
    const { context, config } = compilation;
 -  const ssrPages = compilation.graph.filter((page) => page.isSSR && !page.prerender);
++  console.log({ config });
 +  const ssrPages = compilation.graph.filter(
-+    (page) => page.isSSR && !page.prerender && !page.staticPaths,
++    (page) => {
++      let is = page.isSSR && !page.staticPaths && page.prerender !== true;
++
++      if(is && (config.prerender && page.prerender !== false)) {
++        is = false;
++      }
++
++      return is;
++      // return page.isSSR && !page.staticPaths && page.prerender !== true || (config.prerender && page.prerender === false));
++      // // && (config.prerender === true && page.prerender === false ? true : false)
++      // // if(config.prerender && page.prerender !== false) {
++      // //   is = true;
++      // // }
++      // // console.log({ page, is });
++      // // return is;
++    }
 +  );
++  console.log("$$$$$$", { ssrPages });
++  console.log('config prerender', config.prerender);
    const ssrPrerenderPagesRouteMapper = {};
    const input = [];
  
+-  if (!config.prerender && ssrPages.length > 0) {
++  if (ssrPages.length > 0) {
+     const { executeModuleUrl } = config.plugins
+       .find((plugin) => plugin.type === "renderer")
+       .provider();
+@@ -395,6 +483,7 @@ async function bundleSsrPages(compilation, optimizePlugins) {
+     });
+ 
+     const ssrConfigs = await getRollupConfigForSsrPages(compilation, input);
++    console.log('$$$$$$', { input, ssrConfigs });
+ 
+     if (ssrConfigs.length > 0 && ssrConfigs[0].input !== "") {
+       console.info("bundling dynamic pages...");
 diff --git a/node_modules/@greenwood/cli/src/lifecycles/graph.js b/node_modules/@greenwood/cli/src/lifecycles/graph.js
-index bdb4950..0b82f57 100644
+index bdb4950..cf11d95 100644
 --- a/node_modules/@greenwood/cli/src/lifecycles/graph.js
 +++ b/node_modules/@greenwood/cli/src/lifecycles/graph.js
-@@ -151,6 +151,8 @@ const generateGraph = async (compilation) => {
-           let prerender = true;
+@@ -148,9 +148,11 @@ const generateGraph = async (compilation) => {
+           let label = getLabelFromRoute(`${route}/`);
+           let imports = [];
+           let customData = {};
+-          let prerender = true;
++          let prerender = isStatic === true ? true : null;
            let isolation = false;
            let hydration = false;
 +          let staticPaths = null;
@@ -226,6 +332,15 @@ index bdb4950..0b82f57 100644
  
            /*
             * check if additional nested directories exist to correctly determine route (minus filename)
+@@ -191,7 +193,7 @@ const generateGraph = async (compilation) => {
+               const worker = new Worker(new URL("../lib/ssr-route-worker.js", import.meta.url));
+ 
+               worker.on("message", (result) => {
+-                prerender = result.prerender ?? false;
++                prerender = result.prerender === true || result.prerender === false ? result.prerender : null;
+                 isolation = result.isolation ?? isolation;
+                 hydration = result.hydration ?? hydration;
+ 
 @@ -200,6 +202,14 @@ const generateGraph = async (compilation) => {
                    ssrFrontmatter = result.frontmatter;
                  }
@@ -280,10 +395,10 @@ index bdb4950..0b82f57 100644
  
            pages.push(page);
 diff --git a/node_modules/@greenwood/cli/src/lifecycles/prerender.js b/node_modules/@greenwood/cli/src/lifecycles/prerender.js
-index e3f29b7..4f47aea 100644
+index 84fcbf6..85d14c1 100644
 --- a/node_modules/@greenwood/cli/src/lifecycles/prerender.js
 +++ b/node_modules/@greenwood/cli/src/lifecycles/prerender.js
-@@ -68,10 +68,18 @@ function toScratchUrl(outputHref, context) {
+@@ -68,82 +68,188 @@ function toScratchUrl(outputHref, context) {
  }
  
  async function preRenderCompilationWorker(compilation, workerPrerender) {
@@ -296,14 +411,20 @@ index e3f29b7..4f47aea 100644
 -      !page.isSSR || (page.isSSR && page.prerender) || (page.isSSR && compilation.config.prerender),
 +      !page.isSSR ||
 +      (page.isSSR && page.prerender) ||
-+      (page.isSSR && compilation.config.prerender) ||
++      // (page.isSSR && compilation.config.prerender) ||
++      (page.isSSR && ((page.prerender !== false) && compilation.config.prerender)) ||
++      // (page.isSSR && page.prerender !== false && page.prerender !== null && compilation.config.prerender) ||
 +      page.staticPaths,
    );
-+  console.log("@@@@@@@@@", { pages });
++  console.log("@@@@@@@@@ preRenderCompilationWorker", { pages });
    const { context, config } = compilation;
    const plugins = getPluginInstances(compilation);
  
-@@ -82,68 +90,164 @@ async function preRenderCompilationWorker(compilation, workerPrerender) {
+   console.info("pages to generate", `\n ${pages.map((page) => page.route).join("\n ")}`);
+ 
+   const pool = new WorkerPool(
+-    os.availableParallelism(),
++    os.cpus().length,
      new URL("../lib/ssr-route-worker.js", import.meta.url),
    );
  
@@ -525,16 +646,19 @@ index e3f29b7..4f47aea 100644
  }
  
 diff --git a/node_modules/@greenwood/cli/src/lifecycles/serve.js b/node_modules/@greenwood/cli/src/lifecycles/serve.js
-index beff516..a15a0de 100644
+index beff516..83ef7b4 100644
 --- a/node_modules/@greenwood/cli/src/lifecycles/serve.js
 +++ b/node_modules/@greenwood/cli/src/lifecycles/serve.js
-@@ -315,15 +315,19 @@ async function getStaticServer(compilation, composable) {
+@@ -315,15 +315,22 @@ async function getStaticServer(compilation, composable) {
    app.use(async (ctx, next) => {
      try {
        const url = new URL(`http://localhost:${port}${ctx.url}`);
 -      const matchingRoute = compilation.graph.find((page) => page.route === url.pathname);
++      // TODO: handle base path
 +      const matchingRoute = compilation.graph.find(
-+        (page) => page.staticPaths || page.route === url.pathname,
++        (page) =>
++          (page.staticPaths && getParamsFromSegment(page.segment, url.pathname)) ||
++          page.route === url.pathname,
 +      );
        const isSPA = compilation.graph.find((page) => page.isSPA);
 -      const { isSSR } = matchingRoute || {};
@@ -550,7 +674,7 @@ index beff516..a15a0de 100644
        if (
          ctx.response.status === 404 &&
          ((isSPA && extension === url.pathname) ||
-@@ -332,9 +336,12 @@ async function getStaticServer(compilation, composable) {
+@@ -332,9 +339,12 @@ async function getStaticServer(compilation, composable) {
        ) {
          const outputHref = isSPA
            ? isSPA.outputHref
@@ -558,24 +682,59 @@ index beff516..a15a0de 100644
 +          : isStatic && !matchingRoute.staticPaths
              ? matchingRoute.outputHref
 -            : new URL(`.${url.pathname.replace(basePath, "")}`, outputDir).href;
-+            : matchingRoute.staticPaths
++            : matchingRoute?.staticPaths
 +              ? new URL(`.${url.pathname.replace(basePath, "")}index.html`, outputDir).href
 +              : new URL(`.${url.pathname.replace(basePath, "")}`, outputDir).href;
 +        console.log({ outputHref });
          const body = await fs.readFile(new URL(outputHref), "utf-8");
  
          ctx.body = body;
-@@ -379,7 +386,8 @@ async function getHybridServer(compilation) {
-       if (
-         !config.prerender &&
-         (matchingRoute.isSSR || matchingRouteWithSegment.isSSR) &&
+@@ -365,6 +375,7 @@ async function getHybridServer(compilation) {
+   app.use(async (ctx) => {
+     try {
+       const url = new URL(`http://localhost:${config.port}${ctx.url}`);
++      console.log("getHybridServer url???", { url });
+       const { pathname } = url;
+       const matchingRoute = graph.find((node) => node.route === url.pathname) || { data: {} };
+       const isApiRoute = manifest.apis.has(url.pathname);
+@@ -375,12 +386,31 @@ async function getHybridServer(compilation) {
+       );
+       const matchingRouteWithSegment =
+         getMatchingDynamicSsrRoute(compilation.graph, pathname) || {};
+-
+-      if (
+-        !config.prerender &&
+-        (matchingRoute.isSSR || matchingRouteWithSegment.isSSR) &&
 -        !matchingRoute.prerender
-+        !matchingRoute.prerender &&
-+        !matchingRouteWithSegment.staticPaths
++      console.log('!!!!!', { url , matchingRoute, matchingRouteWithSegment });
++      let is = (matchingRoute.isSSR || matchingRouteWithSegment.isSSR) && !matchingRouteWithSegment.staticPaths;
++      console.log('1111', { is })
++      if((matchingRoute.isSSR && config.prerender === true && matchingRoute.prerender !== false) || (matchingApiRouteWithSegment?.isSSR && config.prerender === true && matchingRouteWithSegment?.prerender !== false)) {
++        is = false;
++      }
++      console.log('222', { is })
++      // page.isSSR && !page.staticPaths && (page.prerender !== true || !config.prerender && page.prerender !== false)
++
++      // let is = page.isSSR && !page.staticPaths && page.prerender !== true;
++
++      // if(is && (config.prerender && page.prerender !== false)) {
++      //   is = false;
++      // }
++
++      // return is;
++      if (is
++        // (matchingRoute.isSSR || matchingRouteWithSegment.isSSR) &&
++        // !matchingRouteWithSegment.staticPaths &&
++        // (matchingRoute.prerender !== true || (!config.prerender && matchingRoute.prerender !== false)) &&
++        // (matchingRouteWithSegment.prerender !== true || (!config.prerender && matchingRouteWithSegment.prerender !== false))
++        // (matchingRoute.prerender !== true && matchingRouteWithSegment.prerender !== true) &&
++        // ((matchingRoute.prerender !== null && matchingRouteWithSegment.prerender !== null) && compilation.config.prerender)
        ) {
++        console.log('getHybridServer serving url => ', { url });
          const entryPointUrl = new URL(
            matchingRoute?.outputHref ?? matchingRouteWithSegment.outputHref,
-@@ -430,7 +438,10 @@ async function getHybridServer(compilation) {
+         );
+@@ -430,7 +460,10 @@ async function getHybridServer(compilation) {
          ctx.message = "OK";
          ctx.set("Content-Type", "text/html");
          ctx.status = 200;
@@ -587,7 +746,7 @@ index beff516..a15a0de 100644
          const apiRoute = manifest.apis.get(matchingApiRouteWithSegment ?? pathname);
          const params =
            matchingRouteWithSegment && apiRoute.segment
-@@ -471,6 +482,7 @@ async function getHybridServer(compilation) {
+@@ -471,6 +504,7 @@ async function getHybridServer(compilation) {
              });
            });
          } else {
