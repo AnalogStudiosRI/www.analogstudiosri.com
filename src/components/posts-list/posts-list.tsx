@@ -4,6 +4,7 @@ import type { Post } from '../../services/posts.ts';
 import postsListSheet from './posts-list.css' with { type: 'css' };
 import themeSheet from '../../styles/theme.css' with { type: 'css' };
 
+// TODO: could this be as gwd-data-static / css modules
 export default class PostsListComponent extends HTMLElement {
   #posts: Post[] = [];
   #max = 0;
@@ -13,16 +14,14 @@ export default class PostsListComponent extends HTMLElement {
       return;
     }
 
-    this.#posts = (await getPosts()).reverse();
-    this.#max = this.hasAttribute('max') ? parseInt(this.getAttribute('max')!, 10) : 0;
-
     if(!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
 
-    console.log({ themeSheet, postsListSheet });
-    // TODO: posts list styles are not applying
-    // this?.shadowRoot?.adoptedStyleSheets.push(themeSheet, postsListSheet);
+    this.#posts = (await getPosts()).reverse();
+    this.#max = this.hasAttribute('max') ? parseInt(this.getAttribute('max')!, 10) : 0;
+
+    this?.shadowRoot?.adoptedStyleSheets.push(themeSheet, postsListSheet);
     this.render();
   }
 
