@@ -1,4 +1,5 @@
 *.log
+.aws-output/
 .greenwood/
 .vscode/
 node_modules/

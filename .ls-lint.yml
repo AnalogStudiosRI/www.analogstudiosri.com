@@ -12,7 +12,8 @@ ls:
   .woff2: lowercase
 
 ignore: 
-  - .git 
+  - .git
+  - .aws-output
   - .greenwood
   - node_modules
   - public

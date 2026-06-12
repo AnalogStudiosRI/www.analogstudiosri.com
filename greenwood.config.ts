@@ -1,9 +1,11 @@
 import { greenwoodPluginCssModules } from '@greenwood/plugin-css-modules';
 import { greenwoodPluginImportJsx } from '@greenwood/plugin-import-jsx';
+import { greenwoodPluginAdapterAws } from '@greenwood/plugin-adapter-aws';
 import analyze from 'rollup-plugin-analyzer';
 import { visualizer } from 'rollup-plugin-visualizer';
 import type { Config, RollupPlugin } from '@greenwood/cli';
 
+// TODO: are these still working?
 const customRollupPlugins: RollupPlugin[] = [
   {
     type: 'rollup',
@@ -44,7 +46,9 @@ const config: Config = {
   plugins: [
     greenwoodPluginCssModules(),
     greenwoodPluginImportJsx(),
-    ...customRollupPlugins
+    greenwoodPluginAdapterAws(),
+    ...customRollupPlugins,
+
   ]
 }
 

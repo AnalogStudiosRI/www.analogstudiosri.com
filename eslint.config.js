@@ -7,6 +7,7 @@ export default tseslint.config(
   {
     // https://github.com/eslint/eslint/discussions/18304#discussioncomment-9069706
     ignores: [
+      ".aws-output/*",
       ".greenwood/*",
       "node_modules/*",
       "public/*",
