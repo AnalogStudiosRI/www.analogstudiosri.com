@@ -1,7 +1,7 @@
 .as-card {
   & a {
     text-decoration: underline;
-    color: var(--color-dark)
+    color: var(--color-dark);
   }
 
   & img {

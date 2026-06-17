@@ -20,10 +20,12 @@
     "#*": "./src/*"
   },
   "scripts": {
-    "lint": "eslint && ls-lint \"./src/**/*.js\" && stylelint \"./src/**/*.css\" && tsc",
     "dev": "NODE_OPTIONS='--import @greenwood/cli/register' greenwood develop",
     "build": "NODE_OPTIONS='--import @greenwood/cli/register' greenwood build",
     "serve": "greenwood serve",
+    "lint": "eslint && ls-lint \"./src/**/*.js\" && stylelint \"./src/**/*.css\" && tsc",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "test": "wtr",
     "test:tdd": "npm run test --watch",
     "postinstall": "patch-package"
@@ -50,6 +52,7 @@
     "eslint-plugin-no-only-tests": "^3.3.0",
     "globals": "^15.14.0",
     "patch-package": "^8.0.1",
+    "prettier": "^3.8.4",
     "rollup-plugin-analyzer": "^4.0.0",
     "rollup-plugin-visualizer": "^7.0.1",
     "stylelint": "^16.10.0",

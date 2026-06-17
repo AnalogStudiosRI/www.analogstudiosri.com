@@ -9,11 +9,13 @@ import "../../components/quick-links/quick-links.tsx";
 export default class ArtistsPage extends HTMLElement {
   async connectedCallback() {
     const albums = await getAlbums();
-    const artistsCardsHtml = albums.map(album => {
-      const detailsJson = JSON.stringify(modelAlbum(album));
-      const escaped = escapeHtmlAttribute(detailsJson);
-      return `<as-card details="${escaped}"></as-card>`;
-    }).join('\n');
+    const artistsCardsHtml = albums
+      .map((album) => {
+        const detailsJson = JSON.stringify(modelAlbum(album));
+        const escaped = escapeHtmlAttribute(detailsJson);
+        return `<as-card details="${escaped}"></as-card>`;
+      })
+      .join("\n");
 
     this.innerHTML = `
       <body>
@@ -24,7 +26,7 @@ export default class ArtistsPage extends HTMLElement {
               <p>Quick Links</p>
               <as-quick-links
                 label='Select Album'
-                links='${JSON.stringify(albums.map(album => ({ route: `/albums/${slugifyer(album.title)}/`, label: album.title })))}'
+                links='${JSON.stringify(albums.map((album) => ({ route: `/albums/${slugifyer(album.title)}/`, label: album.title })))}'
               ></as-quick-links>
             </div>
 

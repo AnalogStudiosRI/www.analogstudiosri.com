@@ -1,9 +1,9 @@
-import { modelArtist, modelAlbum } from '#components/card/card.tsx';
-import { getAlbumsByArtistId } from '#services/albums.ts';
-import { getArtists, getArtistById } from '#services/artists.ts';
-import { escapeHtmlAttribute } from '#services/util.ts';
-import type { Artist } from '#services/artists.ts';
-import type { Album } from '#services/albums.ts';
+import { modelArtist, modelAlbum } from "#components/card/card.tsx";
+import { getAlbumsByArtistId } from "#services/albums.ts";
+import { getArtists, getArtistById } from "#services/artists.ts";
+import { escapeHtmlAttribute } from "#services/util.ts";
+import type { Artist } from "#services/artists.ts";
+import type { Album } from "#services/albums.ts";
 // TODO: import alias (#) does not seem to work here with WCC
 // import '#components/card/card.tsx';
 import "../../components/card/card.tsx";
@@ -13,7 +13,7 @@ interface StaticPaths {
   params: {
     name: string;
     id: number;
-  }
+  };
 }
 
 interface StaticParams {
@@ -25,19 +25,19 @@ interface PageProps {
   params: {
     artist: Artist;
     albums: Album[];
-  }
+  };
 }
 
 export async function getStaticPaths(): Promise<StaticPaths[]> {
   const artists = await getArtists();
 
-  return artists.map(artist => {
+  return artists.map((artist) => {
     return {
       params: {
-        name: artist.name.toLowerCase().replace(/ /g, '-'),
+        name: artist.name.toLowerCase().replace(/ /g, "-"),
         id: artist.id,
-      }
-    }
+      },
+    };
   });
 }
 
@@ -60,18 +60,18 @@ export default class ArtistDetailsPage extends HTMLElement {
 
   #getAlbumsForArtist() {
     if (this.#albums?.length === 0) {
-      return '';
+      return "";
     } else {
       return `
         <h2>Albums by ${this.#artist.name}</h2>
 
-        ${
-          this.#albums.map((album: Album) => {
+        ${this.#albums
+          .map((album: Album) => {
             const detailsJson = JSON.stringify(modelAlbum(album));
             const escaped = escapeHtmlAttribute(detailsJson);
             return `<as-card details="${escaped}"></as-card>`;
-          }).join('\n')
-        }
+          })
+          .join("\n")}
       `;
     }
   }

@@ -1,7 +1,7 @@
-import { modelAlbum } from '#components/card/card.tsx';
-import { slugifyer, escapeHtmlAttribute } from '#services/util.ts';
-import { getAlbums, getAlbumById } from '#services/albums.ts';
-import type { Album } from '#services/albums.ts';
+import { modelAlbum } from "#components/card/card.tsx";
+import { slugifyer, escapeHtmlAttribute } from "#services/util.ts";
+import { getAlbums, getAlbumById } from "#services/albums.ts";
+import type { Album } from "#services/albums.ts";
 // TODO: import alias (#) does not seem to work here with WCC
 // import '#components/card/card.tsx';
 import "../../components/card/card.tsx";
@@ -11,29 +11,29 @@ interface StaticPaths {
   params: {
     name: string;
     id: number;
-  }
+  };
 }
 
 interface StaticParams {
-  album: Album
+  album: Album;
 }
 
 interface PageProps {
   params: {
     album: Album;
-  }
+  };
 }
 
 export async function getStaticPaths(): Promise<StaticPaths[]> {
   const albums = await getAlbums();
 
-  return albums.map(album => {
+  return albums.map((album) => {
     return {
       params: {
         name: slugifyer(album.title),
         id: album.id,
-      }
-    }
+      },
+    };
   });
 }
 
@@ -57,7 +57,7 @@ export default class AlbumDetailsPage extends HTMLElement {
         <a class="download-url as-link" href="${album.downloadUrl}" rel="noopener noreferrer">Download Link</a>
       `;
     }
-    return '';
+    return "";
   }
 
   connectedCallback() {

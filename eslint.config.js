@@ -39,7 +39,7 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/consistent-type-definitions": "error",
       "@typescript-eslint/no-namespace": "off",
-      "@typescript-eslint/no-import-type-side-effects": "error"
-    }
-  }
+      "@typescript-eslint/no-import-type-side-effects": "error",
+    },
+  },
 );

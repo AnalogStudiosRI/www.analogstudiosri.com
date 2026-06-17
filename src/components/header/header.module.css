@@ -10,7 +10,7 @@
   justify-content: space-between;
   margin: auto;
 
-  @media(max-width: 768px) {
+  @media (max-width: 768px) {
     flex-direction: column;
   }
 }

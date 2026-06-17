@@ -15,11 +15,13 @@ export default class ArtistsPage extends HTMLElement {
     // make sure "newer" artists are at the top
     const artistsList = artists.reverse().filter((artist) => artist.id !== this.#ANALOG_ID);
     const analog = artists.filter((artist) => artist.id === this.#ANALOG_ID)[0];
-    const artistsCardsHtml = [analog, ...artistsList].map(artist => {
-      const detailsJson = JSON.stringify(modelArtist(artist));
-      const escaped = escapeHtmlAttribute(detailsJson);
-      return `<as-card details="${escaped}"></as-card>`;
-    }).join('\n');
+    const artistsCardsHtml = [analog, ...artistsList]
+      .map((artist) => {
+        const detailsJson = JSON.stringify(modelArtist(artist));
+        const escaped = escapeHtmlAttribute(detailsJson);
+        return `<as-card details="${escaped}"></as-card>`;
+      })
+      .join("\n");
 
     this.innerHTML = `
       <body>
@@ -30,7 +32,7 @@ export default class ArtistsPage extends HTMLElement {
               <p>Quick Links</p>
               <as-quick-links
                 label='Select Artist'
-                links='${JSON.stringify(artists.map(artist => ({ route: `/artists/${slugifyer(artist.name)}/`, label: artist.name })))}'
+                links='${JSON.stringify(artists.map((artist) => ({ route: `/artists/${slugifyer(artist.name)}/`, label: artist.name })))}'
               ></as-quick-links>
             </div>
 

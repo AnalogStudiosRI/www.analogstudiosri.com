@@ -10,7 +10,7 @@
   list-style-type: none;
   padding-left: 0px;
 
-  @media(max-width: 768px) {
+  @media (max-width: 768px) {
     flex-direction: column;
     justify-content: space-between;
   }
@@ -34,15 +34,16 @@
 
   /* stylelint-disable-next-line a11y/media-prefers-reduced-motion */
   &::after {
-    content: '';
+    content: "";
     display: block;
     width: 0;
     height: 1.5px;
     background: var(--color-dark);
-    transition: width .3s;
+    transition: width 0.3s;
   }
 
-  &:hover::after, &:focus::after {
+  &:hover::after,
+  &:focus::after {
     width: 100%;
   }
 

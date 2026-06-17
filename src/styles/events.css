@@ -1,15 +1,13 @@
 .as-route-event-details {
-
   & .cal-icon {
     font-size: 5rem;
   }
 
   & img {
-    display: block!important;
-    height: 100%!important;
-    width: 100%!important;
+    display: block !important;
+    height: 100% !important;
+    width: 100% !important;
   }
-
 }
 
 .as-events-container {
@@ -24,7 +22,7 @@
     color: var(--color-tertiary);
   }
 
-  @media(max-width: 768px) {
+  @media (max-width: 768px) {
     margin: 1rem 0;
   }
 
@@ -38,7 +36,7 @@
   font-size: 1.2rem;
   padding: 2rem;
 
-  @media(max-width: 768px) {
+  @media (max-width: 768px) {
     flex-direction: column;
     padding: 1rem;
   }
