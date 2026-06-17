@@ -23,6 +23,7 @@ export default class ArtistsPage extends HTMLElement {
             <div class="hidden-sm-down col-xs-3">
               <p>Quick Links</p>
               <as-quick-links
+                label='Select Album'
                 links='${JSON.stringify(albums.map(album => ({ route: `/albums/${slugifyer(album.title)}/`, label: album.title })))}'
               ></as-quick-links>
             </div>

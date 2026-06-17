@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        node: [22]
+        node: [24]
 
     steps:
     - uses: actions/checkout@v4
@@ -23,6 +23,9 @@ jobs:
     - name: Lint
       run: |
         npm run lint
+    - name: Format Check
+      run: |
+        npm run format:check
     # - name: Test
     #   run: |
     #     npm run test

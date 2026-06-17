@@ -2,7 +2,8 @@ declare global {
   namespace JSX {
     interface IntrinsicElements {
       'as-quick-links': {
-        links: Link[]
+        links: Link[];
+        lable: string;
       };
     }
   }
@@ -13,12 +14,13 @@ interface Link {
   label: string,
 }
 
-// TODO: would be nice to do this without JavaScript
 export default class QuickLinks extends HTMLElement {
   links: Link[] = [];
+  label: string = '';
 
   connectedCallback() {
     this.links = JSON.parse(this.getAttribute('links') ?? '[]');
+    this.label = this.getAttribute('label') ?? 'Select Option';
 
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
@@ -39,7 +41,7 @@ export default class QuickLinks extends HTMLElement {
 
   render() {
     const { links } = this;
-    const optionsListHtml = [{ route: "default", label: "Select Option" }, ...links].map(link => {
+    const optionsListHtml = [{ route: "default", label: this.label }, ...links].map(link => {
       return `<option value="${link.route}">${link.label}</option>`;
     }).join('\n');
 
