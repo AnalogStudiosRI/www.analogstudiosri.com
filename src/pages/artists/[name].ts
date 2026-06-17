@@ -1,6 +1,7 @@
 import { modelArtist, modelAlbum } from '#components/card/card.tsx';
 import { getAlbumsByArtistId } from '#services/albums.ts';
 import { getArtists, getArtistById } from '#services/artists.ts';
+import { escapeHtmlAttribute } from '#services/util.ts';
 import type { Artist } from '#services/artists.ts';
 import type { Album } from '#services/albums.ts';
 // TODO: import alias (#) does not seem to work here with WCC
@@ -66,7 +67,9 @@ export default class ArtistDetailsPage extends HTMLElement {
 
         ${
           this.#albums.map((album: Album) => {
-            return `<as-card details='${JSON.stringify(modelAlbum(album))}'></as-card>`;
+            const detailsJson = JSON.stringify(modelAlbum(album));
+            const escaped = escapeHtmlAttribute(detailsJson);
+            return `<as-card details="${escaped}"></as-card>`;
           }).join('\n')
         }
       `;
@@ -90,7 +93,7 @@ export default class ArtistDetailsPage extends HTMLElement {
             <div class="col-xs-6">
 
               <div class="card-row hidden-sm-down">
-                <as-card details='${JSON.stringify(rest)}'></as-card>
+                <as-card details="${escapeHtmlAttribute(JSON.stringify(rest))}"></as-card>
               </div>
 
               <div class="card-row hidden-md-up">

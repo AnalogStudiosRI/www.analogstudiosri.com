@@ -1,6 +1,6 @@
 import { getArtists } from "#services/artists.ts";
 import { modelArtist } from "#components/card/card.tsx";
-import { slugifyer } from "#services/util.ts";
+import { slugifyer, escapeHtmlAttribute } from "#services/util.ts";
 // TODO: import alias (#) does not seem to work here with WCC
 // import '#components/card/card.tsx';
 import "../../components/card/card.tsx";
@@ -16,7 +16,9 @@ export default class ArtistsPage extends HTMLElement {
     const artistsList = artists.reverse().filter((artist) => artist.id !== this.#ANALOG_ID);
     const analog = artists.filter((artist) => artist.id === this.#ANALOG_ID)[0];
     const artistsCardsHtml = [analog, ...artistsList].map(artist => {
-      return `<as-card details='${JSON.stringify(modelArtist(artist))}'></as-card>`;
+      const detailsJson = JSON.stringify(modelArtist(artist));
+      const escaped = escapeHtmlAttribute(detailsJson);
+      return `<as-card details="${escaped}"></as-card>`;
     }).join('\n');
 
     this.innerHTML = `

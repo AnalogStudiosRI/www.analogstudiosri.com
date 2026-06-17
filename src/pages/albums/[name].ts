@@ -1,5 +1,5 @@
 import { modelAlbum } from '#components/card/card.tsx';
-import { slugifyer } from '#services/util.ts';
+import { slugifyer, escapeHtmlAttribute } from '#services/util.ts';
 import { getAlbums, getAlbumById } from '#services/albums.ts';
 import type { Album } from '#services/albums.ts';
 // TODO: import alias (#) does not seem to work here with WCC
@@ -78,7 +78,7 @@ export default class AlbumDetailsPage extends HTMLElement {
             <div class="col-xs-6">
               <div class="card-row hidden-sm-down">
                 ${AlbumDetailsPage.getDownloadLink(this.#album)}
-                <as-card details='${JSON.stringify(rest)}'></as-card>
+                <as-card details="${escapeHtmlAttribute(JSON.stringify(rest))}"></as-card>
               </div>
 
               <div class="card-row hidden-md-up">

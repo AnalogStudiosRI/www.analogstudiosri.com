@@ -3,8 +3,6 @@ import type { Album } from '#services/albums.ts';
 import { slugifyer } from '#services/util.ts';
 // TODO: CSS Module Scripts do not work with SSR pages
 
-const lorum = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis tempor commodo dictum. Donec interdum finibus congue. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Integer id accumsan ante. Suspendisse potenti. Nulla facilisi. Nullam mattis erat lectus, condimentum facilisis erat posuere sed. Maecenas quis lacinia lorem.`;
-
 interface Details {
   imagePath: string,
   headingText: string,
@@ -13,14 +11,11 @@ interface Details {
   link: string
 }
 
-// TODO: make links here and in modelArtist "url safe"
 function modelAlbum(album: Album) {
   return {
     imagePath: album ? album.imageUrl : '',
     headingText: album ? album.title : '',
-    // TODO: make content from APIs work
-    // bodyText: album ? album.description : '',
-    bodyText: album ? lorum : '',
+    bodyText: album ? album.description : '',
     imageAltText: album ? album.title : '',
     link: album ? `/albums/${slugifyer(album.title)}/` : '#'
   };
@@ -30,9 +25,7 @@ function modelArtist(artist: Artist) {
   return {
     imagePath: artist ? artist.imageUrl : '',
     headingText: artist ? artist.name : '',
-    // TODO: make content from APIs work
-    // bodyText: artist ? artist.bio : '',
-    bodyText: artist ? lorum : '',
+    bodyText: artist ? artist.bio : '',
     imageAltText: artist ? artist.name : '',
     link: artist ? `/artists/${slugifyer(artist.name)}/` : '#'
   };

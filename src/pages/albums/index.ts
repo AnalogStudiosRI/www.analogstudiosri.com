@@ -1,5 +1,5 @@
 import { getAlbums } from "#services/albums.ts";
-import { slugifyer } from "#services/util.ts";
+import { slugifyer, escapeHtmlAttribute } from "#services/util.ts";
 import { modelAlbum } from "#components/card/card.tsx";
 // TODO: import alias (#) does not seem to work here with WCC
 // import '#components/card/card.tsx';
@@ -10,7 +10,9 @@ export default class ArtistsPage extends HTMLElement {
   async connectedCallback() {
     const albums = await getAlbums();
     const artistsCardsHtml = albums.map(album => {
-      return `<as-card details='${JSON.stringify(modelAlbum(album))}'></as-card>`;
+      const detailsJson = JSON.stringify(modelAlbum(album));
+      const escaped = escapeHtmlAttribute(detailsJson);
+      return `<as-card details="${escaped}"></as-card>`;
     }).join('\n');
 
     this.innerHTML = `
