@@ -19,3 +19,17 @@ index 2e24c74..aeb3ac1 100644
              const disconnectedCallbackContents = hasDisconnectedCallback
                ? ''
                : `
+diff --git a/node_modules/wc-compiler/src/jsx.d.ts b/node_modules/wc-compiler/src/jsx.d.ts
+index ca6e96a..5ebb83e 100644
+--- a/node_modules/wc-compiler/src/jsx.d.ts
++++ b/node_modules/wc-compiler/src/jsx.d.ts
+@@ -25,7 +25,8 @@ type PopoverAttributes = {
+ // map each HTML tag to its attributes
+ type IntrinsicElementsFromDom = {
+   [E in keyof HTMLElementTagNameMap]: ElementAttributes<HTMLElementTagNameMap[E]> &
+-    (E extends 'button' | 'input' ? PopoverAttributes : {});
++    (E extends 'button' | 'input' ? PopoverAttributes : {}) & 
++    (E extends 'button' ? { tabindex: number } : {});
+ };
+ 
+ declare namespace JSX {
