@@ -45,22 +45,7 @@ export class EventsCalendarComponent extends HTMLElement {
   }
 
   async connectedCallback() {
-    const events = await getEvents();
-
-    // TODO: clean up test event data
-    this.#events = [
-      ...events,
-      {
-        id: 82,
-        title: "Test Event",
-        description:
-          '\u003Cp\u003EBlissRI is back again for a two-day event!  We will be live-streaming the event so if you can&#39;t make it down, check out the live stream on \u003Ca href="https://www.youtube.com/watch?v=Pkzw1C17Eag"\u003EYouTube\u003C/a\u003E or \u003Ca href="https://www.facebook.com/events/747593301143608/"\u003EFacebook\u003C/a\u003E.\u003C/p\u003E\u003Cimg src="//images.ctfassets.net/kpfxkjvd7pox/1YFY5EZvqgWlaLafANbZEs/ece5d39a0f578a4f2f690663e504e32d/bliss-2025.jpg" loading="lazy"/\u003E\u003Cp\u003E\u003C/p\u003E',
-        startTime: Math.floor(new Date().getTime() / 1000),
-        endTime: Math.floor(new Date().getTime() / 1000) + 3600,
-        createdTime: new Date().toISOString(),
-        tags: [],
-      },
-    ];
+    this.#events = await getEvents();
 
     if (!this.shadowRoot) {
       this.attachShadow({ mode: "open" });
@@ -216,13 +201,11 @@ export class EventsCalendarComponent extends HTMLElement {
     return (
       <div class="as-events-calendar">
         <div class="as-events-calendar__header">
-          {/* TODO: */}
-          {/* @ts-expect-error index type raises a TS error */}
           <button
             type="button"
             class="btn btn-default btn-sm as-events-calendar__btn"
             onclick={this.shiftToPreviousMonth}
-            tabindex="-1"
+            tabindex={-1}
             aria-label="goto previous month"
           >
             <i class="fa fa-arrow-left"></i>
@@ -234,13 +217,11 @@ export class EventsCalendarComponent extends HTMLElement {
             <span class="as-events-calendar__month">{headerText}</span>
           </h3>
 
-          {/* TODO: */}
-          {/* @ts-expect-error index type raises a TS error */}
           <button
             type="button"
             class="btn btn-default btn-sm as-events-calendar__btn"
             onclick={this.shiftToNextMonth}
-            tabindex="-1"
+            tabindex={-1}
             aria-label="goto next month"
           >
             <i class="fa fa-arrow-right"></i>
