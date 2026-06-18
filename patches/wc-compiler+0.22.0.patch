@@ -20,16 +20,46 @@ index 2e24c74..aeb3ac1 100644
                ? ''
                : `
 diff --git a/node_modules/wc-compiler/src/jsx.d.ts b/node_modules/wc-compiler/src/jsx.d.ts
-index ca6e96a..7e45951 100644
+index ca6e96a..88b606a 100644
 --- a/node_modules/wc-compiler/src/jsx.d.ts
 +++ b/node_modules/wc-compiler/src/jsx.d.ts
-@@ -25,7 +25,8 @@ type PopoverAttributes = {
+@@ -7,6 +7,21 @@ type ElementAttributes<E extends HTMLElement> = {
+   [A in keyof E]?: E[A] extends (...args: any) => any ? any : IsCSSStyleDeclaration<E[A]>;
+ } & {
+   class?: string;
++  children?: any;
++};
++
++// creates a utility type for SVG attributes, allowing string values for SVG-specific attributes
++type SVGElementAttributes<E extends SVGElement> = {
++  [A in keyof E]?: string | undefined;
++} & {
++  class?: string;
++  fill?: string;
++  stroke?: string;
++  d?: string;
++  viewBox?: string;
++  xmlns?: string;
++  preserveAspectRatio?: string;
++  [key: string]: any;
+ };
+ 
+ type PopoverState = 'auto' | 'manual' | 'hint';
+@@ -25,9 +40,15 @@ type PopoverAttributes = {
  // map each HTML tag to its attributes
  type IntrinsicElementsFromDom = {
    [E in keyof HTMLElementTagNameMap]: ElementAttributes<HTMLElementTagNameMap[E]> &
 -    (E extends 'button' | 'input' ? PopoverAttributes : {});
 +    (E extends 'button' | 'input' ? PopoverAttributes : {}) & 
-+    (E extends 'button' ? { tabindex: number | string } : {});
++    (E extends 'button' ? { tabindex?: number | string } : {});
++};
++
++// map each SVG tag to its attributes
++type IntrinsicElementsFromSVG = {
++  [E in keyof SVGElementTagNameMap]: SVGElementAttributes<SVGElementTagNameMap[E]>;
  };
  
  declare namespace JSX {
+-  interface IntrinsicElements extends IntrinsicElementsFromDom {}
++  interface IntrinsicElements extends IntrinsicElementsFromDom, IntrinsicElementsFromSVG {}
+ }
