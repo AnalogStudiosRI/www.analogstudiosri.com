@@ -781,3 +781,54 @@ index 00657ab..8d4d4cb 100644
            request: req,
            contentOptions: JSON.stringify({
              body: true,
+diff --git a/node_modules/@greenwood/cli/src/types/index.d.ts b/node_modules/@greenwood/cli/src/types/index.d.ts
+index 8a37b31..6ff956c 100644
+--- a/node_modules/@greenwood/cli/src/types/index.d.ts
++++ b/node_modules/@greenwood/cli/src/types/index.d.ts
+@@ -9,7 +9,7 @@ import type {
+ } from "./content.d.ts";
+ import type { Compilation, Frontmatter } from "./compilation.d.ts";
+ import type { ApiRouteHandler } from "./api.d.ts";
+-import type { SsrRouteHandler, GetBody, GetLayout, GetFrontmatter } from "./ssr.d.ts";
++import type { SsrRouteHandler, GetBody, GetLayout, GetFrontmatter, GetStaticPaths, GetStaticParams, InferGetStaticParamsType, InferGetStaticPropsType } from "./ssr.d.ts";
+ import type {
+   PLUGINS,
+   PLUGIN_TYPES,
+@@ -56,6 +56,10 @@ export type {
+   GetBody,
+   GetLayout,
+   GetFrontmatter,
++  GetStaticPaths,
++  GetStaticParams,
++  InferGetStaticParamsType,
++  InferGetStaticPropsType
+ };
+ 
+ export type CLI_COMMAND = "develop" | "build" | "serve";
+diff --git a/node_modules/@greenwood/cli/src/types/ssr.d.ts b/node_modules/@greenwood/cli/src/types/ssr.d.ts
+index 2388873..920ea74 100644
+--- a/node_modules/@greenwood/cli/src/types/ssr.d.ts
++++ b/node_modules/@greenwood/cli/src/types/ssr.d.ts
+@@ -23,10 +23,21 @@ export type GetBody = (
+   request: Request,
+   params: Params,
+ ) => Promise<string>;
++
+ export type GetLayout = (
+   compilation: Compilation,
+   page: Page,
+   request: Request,
+   params: Params,
+ ) => Promise<string>;
++
+ export type GetFrontmatter = (compilation: Compilation, page: Page) => Promise<Frontmatter>;
++
++export type StaticPath = { params: object };
++export type StaticParam = Record<string, unknown>;
++
++export type GetStaticPaths = () => Promise<StaticPath[]>;
++export type GetStaticParams = ({ params }) => Promise<StaticParam>;
++
++export type InferGetStaticParamsType<T> = T extends () => Promise<Array<{ params: infer P }>> ? P : never;
++export type InferGetStaticPropsType<T> = T extends (...args: any[]) => Promise<infer R> ? R : never;
+\ No newline at end of file

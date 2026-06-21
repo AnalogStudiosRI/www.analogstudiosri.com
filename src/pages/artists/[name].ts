@@ -7,28 +7,12 @@ import type { Album } from "#services/albums.ts";
 // TODO: import alias (#) does not seem to work here with WCC
 // import '#components/card/card.tsx';
 import "../../components/card/card.tsx";
+import type { GetStaticPaths, GetStaticParams, InferGetStaticParamsType, InferGetStaticPropsType } from "@greenwood/cli";
 
-// TODO: types for all this from Greenwood: StaticPaths / Params / SSR page / etc?  can they be inferred?
-interface StaticPaths {
-  params: {
-    name: string;
-    id: number;
-  };
-}
+type Params = InferGetStaticParamsType<typeof getStaticPaths>;
+type Props = InferGetStaticPropsType<typeof getStaticParams>;
 
-interface StaticParams {
-  artist: Artist;
-  albums: Album[];
-}
-
-interface PageProps {
-  params: {
-    artist: Artist;
-    albums: Album[];
-  };
-}
-
-export async function getStaticPaths(): Promise<StaticPaths[]> {
+export const getStaticPaths = (async function() {
   const artists = await getArtists();
 
   return artists.map((artist) => {
@@ -39,20 +23,20 @@ export async function getStaticPaths(): Promise<StaticPaths[]> {
       },
     };
   });
-}
+}) satisfies GetStaticPaths;
 
-export async function getStaticParams({ params }: StaticPaths): Promise<StaticParams> {
+export const getStaticParams = (async function({ params }: { params: Params }) {
   const artist = await getArtistById(params.id);
-  const albums = await getAlbumsByArtistId(artist.id); // this.albums = await getAlbumsByArtistId(parseInt(this.id, 10))
+  const albums = await getAlbumsByArtistId(artist.id);
 
   return { artist, albums };
-}
+}) satisfies GetStaticParams;
 
 export default class ArtistDetailsPage extends HTMLElement {
   #artist: Artist;
   #albums: Album[] = [];
 
-  constructor({ params }: PageProps) {
+  constructor({ params }: { params: Props }) {
     super();
     this.#artist = params?.artist;
     this.#albums = params.albums;
