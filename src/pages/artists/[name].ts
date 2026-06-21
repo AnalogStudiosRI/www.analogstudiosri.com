@@ -7,12 +7,17 @@ import type { Album } from "#services/albums.ts";
 // TODO: import alias (#) does not seem to work here with WCC
 // import '#components/card/card.tsx';
 import "../../components/card/card.tsx";
-import type { GetStaticPaths, GetStaticParams, InferGetStaticParamsType, InferGetStaticPropsType } from "@greenwood/cli";
+import type {
+  GetStaticPaths,
+  GetStaticParams,
+  InferGetStaticParamsType,
+  InferGetStaticPropsType,
+} from "@greenwood/cli";
 
 type Params = InferGetStaticParamsType<typeof getStaticPaths>;
 type Props = InferGetStaticPropsType<typeof getStaticParams>;
 
-export const getStaticPaths = (async function() {
+export const getStaticPaths = async function () {
   const artists = await getArtists();
 
   return artists.map((artist) => {
@@ -23,14 +28,14 @@ export const getStaticPaths = (async function() {
       },
     };
   });
-}) satisfies GetStaticPaths;
+} satisfies GetStaticPaths;
 
-export const getStaticParams = (async function({ params }: { params: Params }) {
+export const getStaticParams = async function ({ params }: { params: Params }) {
   const artist = await getArtistById(params.id);
   const albums = await getAlbumsByArtistId(artist.id);
 
   return { artist, albums };
-}) satisfies GetStaticParams;
+} satisfies GetStaticParams;
 
 export default class ArtistDetailsPage extends HTMLElement {
   #artist: Artist;
