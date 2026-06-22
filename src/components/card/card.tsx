@@ -66,9 +66,7 @@ export class CardComponent extends HTMLElement {
                 </div>
 
                 <div class="media-body">
-                  <h3 class="media-heading">
-                    {detailsHeadingLink}
-                  </h3>
+                  <h3 class="media-heading">{detailsHeadingLink}</h3>
                   <p>{bodyText}</p>
                 </div>
               </div>
