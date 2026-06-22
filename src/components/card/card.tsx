@@ -45,6 +45,13 @@ export class CardComponent extends HTMLElement {
     }
 
     const { imagePath, imageAltText, bodyText, headingText, link } = this.#details;
+    const detailsHeadingLink = !link
+      ? headingText
+      : `
+        <a href="${link}" title="Visit ${headingText}">
+          ${headingText}
+        </a>
+      `;
 
     // TODO: # private references don't work with WCC?
     return (
@@ -55,16 +62,12 @@ export class CardComponent extends HTMLElement {
             <div class="card-row hidden-sm-down">
               <div class="media">
                 <div class="media-left">
-                  <a href={link} title={`Visit ${headingText}`}>
-                    <img class="media-object" src={imagePath} alt={imageAltText} />
-                  </a>
+                  <img class="media-object" src={imagePath} alt={imageAltText} />
                 </div>
 
                 <div class="media-body">
                   <h3 class="media-heading">
-                    <a href={link} title={`Visit ${headingText}`}>
-                      {headingText}
-                    </a>
+                    {detailsHeadingLink}
                   </h3>
                   <p>{bodyText}</p>
                 </div>
