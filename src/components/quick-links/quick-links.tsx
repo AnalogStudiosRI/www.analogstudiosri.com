@@ -3,7 +3,7 @@ declare global {
     interface IntrinsicElements {
       "as-quick-links": {
         links: Link[];
-        lable: string;
+        label: string;
       };
     }
   }
