@@ -9,7 +9,6 @@
     "erasableSyntaxOnly": true,
     "noImplicitAny": true,
     "noEmit": true,
-    "skipLibCheck": true,
     "strict": true,
     "jsx": "preserve",
     "jsxImportSource": "wc-compiler"

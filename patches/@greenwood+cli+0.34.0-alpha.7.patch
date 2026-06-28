@@ -1,0 +1,140 @@
+diff --git a/node_modules/@greenwood/cli/src/lib/graph-utils.js b/node_modules/@greenwood/cli/src/lib/graph-utils.js
+index a77e034..65aa770 100644
+--- a/node_modules/@greenwood/cli/src/lib/graph-utils.js
++++ b/node_modules/@greenwood/cli/src/lib/graph-utils.js
+@@ -31,25 +31,54 @@ function getStaticPages(compilation) {
+ function getMatchingPageByRoute(compilation, route) {
+   const { graph, config } = compilation;
+ 
+-  return graph.find((page) => {
+-    return (
+-      // exact match
+-      page.route === route ||
+-      // dynamic route
+-      (page.segment &&
+-        new URLPattern({ pathname: `${config.basePath}${page.segment.pathname}` }).test(
+-          `https://example.com${route}`,
+-        )) ||
+-      // getStaticPaths
+-      (page.hasStaticParams &&
+-        page.staticPaths.find((path) => {
+-          const { segment } = page;
+-          const staticRoute = route.replace(`[${segment.key}]`, path.params[segment.key]);
+-
+-          return `${config.basePath}${staticRoute}` === route;
+-        }))
+-    );
+-  });
++  const exactMatch = graph.find(page => page.route === route);
++
++  if(exactMatch) {
++    return exactMatch
++  };
++
++  const dynamicMatch = graph.find(page => page.segment && new URLPattern({ pathname: `${config.basePath}${page.segment.pathname}` }).test(
++    `https://example.com${route}`,
++  ))
++  
++  if(dynamicMatch) {
++    return dynamicMatch
++  };
++
++  const staticMatch = graph.find(page => page.hasStaticParams &&
++    page.staticPaths.find((path) => {
++      const { segment } = page;
++      const staticRoute = route.replace(`[${segment.key}]`, path.params[segment.key]);
++
++      return `${config.basePath}${staticRoute}` === route;
++    })
++  )
++
++  if(staticMatch) {
++    return staticMatch;
++  }
++
++
++  // return graph.find((page) => {
++  //   if(page.route === route)
++    // return (
++    //   // exact match
++    //   page.route === route ||
++    //   // dynamic route
++    //   (page.segment &&
++    //     new URLPattern({ pathname: `${config.basePath}${page.segment.pathname}` }).test(
++    //       `https://example.com${route}`,
++    //     )) ||
++    //   // getStaticPaths
++    //   (page.hasStaticParams &&
++    //     page.staticPaths.find((path) => {
++    //       const { segment } = page;
++    //       const staticRoute = route.replace(`[${segment.key}]`, path.params[segment.key]);
++
++    //       return `${config.basePath}${staticRoute}` === route;
++    //     }))
++    // );
++  // });
+ }
+ 
+ export { getDynamicPages, getStaticPages, getMatchingPageByRoute };
+diff --git a/node_modules/@greenwood/cli/src/lib/resource-utils.js b/node_modules/@greenwood/cli/src/lib/resource-utils.js
+index 950f7a5..62671f0 100644
+--- a/node_modules/@greenwood/cli/src/lib/resource-utils.js
++++ b/node_modules/@greenwood/cli/src/lib/resource-utils.js
+@@ -1,6 +1,7 @@
+ import fs from "node:fs/promises";
+ import { hashString } from "./hashing-utils.js";
+ import { getResolvedHrefFromPathnameShortcut } from "../lib/node-modules-utils.js";
++import { getMatchingPageByRoute } from "../lib/graph-utils.js";
+ import { parse } from "node-html-parser";
+ import { asyncMap } from "./async-utils.js";
+ 
+@@ -120,6 +121,7 @@ async function resolveForRelativeUrl(url, rootUrl) {
+ }
+ 
+ async function trackResourcesForRoute(html, compilation, route) {
++  console.log('trackResourcesForRoute', { route });
+   const { context } = compilation;
+   const root = parse(html, {
+     blockTextElements: {
+@@ -208,7 +210,14 @@ async function trackResourcesForRoute(html, compilation, route) {
+     });
+   });
+ 
+-  compilation.graph.find((page) => page.route === route).resources = resources.map(
++  // compilation.graph.find((page) => page.route === route).resources = resources.map(
++  //   (resource) => resource.sourcePathURL.pathname,
++  // );
++
++  const matchingRoute = getMatchingPageByRoute(compilation, route);
++  console.log('trackResourcesForRoute', { matchingRoute });
++
++  matchingRoute.resources = resources.map(
+     (resource) => resource.sourcePathURL.pathname,
+   );
+ 
+diff --git a/node_modules/@greenwood/cli/src/lifecycles/prerender.js b/node_modules/@greenwood/cli/src/lifecycles/prerender.js
+index b1ad9d6..8809f8e 100644
+--- a/node_modules/@greenwood/cli/src/lifecycles/prerender.js
++++ b/node_modules/@greenwood/cli/src/lifecycles/prerender.js
+@@ -74,7 +74,7 @@ async function preRenderCompilationWorker(compilation, workerPrerender) {
+   const { context, config } = compilation;
+   const plugins = getPluginInstances(compilation);
+ 
+-  console.info("pages to generate", `\n ${pages.map((page) => page.route).join("\n ")}`);
++  console.info("preRenderCompilationWorker pages to generate", `\n ${pages.map((page) => page.route).join("\n ")}`);
+ 
+   const pool = new WorkerPool(
+     os.cpus().length,
+diff --git a/node_modules/@greenwood/cli/src/types/ssr.d.ts b/node_modules/@greenwood/cli/src/types/ssr.d.ts
+index 95e35e6..9e1d27f 100644
+--- a/node_modules/@greenwood/cli/src/types/ssr.d.ts
++++ b/node_modules/@greenwood/cli/src/types/ssr.d.ts
+@@ -37,7 +37,7 @@ export type StaticPath = { params: object };
+ export type StaticParam = Record<string, unknown>;
+ 
+ export type GetStaticPaths = () => Promise<StaticPath[]>;
+-export type GetStaticParams = ({ params }) => Promise<StaticParam>;
++export type GetStaticParams = ({ params }: InferGetStaticParamsType<StaticPath>) => Promise<StaticParam>;
+ 
+ export type InferGetStaticParamsType<T> = T extends () => Promise<Array<{ params: infer P }>>
+   ? P
