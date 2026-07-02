@@ -20,6 +20,7 @@ jobs:
       - name: Format Check
         run: |
           npm run format:check
+      # TODO: add typechecking
       # TODO: restore testing
       # - name: Test
       #   run: |
