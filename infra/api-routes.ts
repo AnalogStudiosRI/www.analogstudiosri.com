@@ -25,7 +25,7 @@ const apiRoutes = (
 // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
 const ssrPages = (
   await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } })
-).default.filter((page) => page.isSSR);
+).default.filter((page) => page.isSSR && !page.staticPaths);
 
 // https://sst.dev/docs/component/aws/apigatewayv2
 // https://sst.dev/docs/component/aws/function

@@ -4,7 +4,7 @@ import { api } from "./api-routes.ts";
 // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
 const ssrPages = (
   await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } })
-).default.filter((page) => page.isSSR);
+).default.filter((page) => page.isSSR && !page.staticPaths);
 const ssrRoutes = {};
 
 // TODO handle base path
