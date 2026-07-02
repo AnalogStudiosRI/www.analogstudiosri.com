@@ -1,10 +1,26 @@
 import { frontend } from "./static";
 import { api } from "./api-routes";
 
-// @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
-const ssrPages = (
-  await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } })
-).default.filter((page) => page.isSSR && !page.hasStaticParams);
+// TODO: pull this from Greenwood / config
+function getDynamicPages(compilation) {
+  const { config, graph } = compilation;
+
+  // would be nice to do this without the extra conditional (good first issue)
+  return graph.filter((page) => {
+    let isSsrRoute = page.isSSR && !page.staticPaths && page.prerender !== true;
+
+    if (isSsrRoute && config.prerender && page.prerender !== false) {
+      isSsrRoute = false;
+    }
+
+    return isSsrRoute;
+  });
+}
+
+const graph = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
+(await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } }))
+  .default;
+const ssrPages = getDynamicPages({ config: { prerender: true }, graph });
 const ssrRoutes = {};
 
 // TODO handle base path

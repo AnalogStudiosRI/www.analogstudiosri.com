@@ -2,15 +2,30 @@ export const api = new sst.aws.ApiGatewayV2("Api");
 
 const RUNTIME = "nodejs24.x";
 
+// TODO: pull this from Greenwood / config
+function getDynamicPages(compilation) {
+  const { config, graph } = compilation;
+
+  // would be nice to do this without the extra conditional (good first issue)
+  return graph.filter((page) => {
+    let isSsrRoute = page.isSSR && !page.staticPaths && page.prerender !== true;
+
+    if (isSsrRoute && config.prerender && page.prerender !== false) {
+      isSsrRoute = false;
+    }
+
+    return isSsrRoute;
+  });
+}
+
+const graph = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
+(await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } }))
+  .default;
 // TODO need to handle basePath here?  (and / or all adapters?)
-// @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
-const apiRoutes = (
-  await import(new URL("../../public/manifest.json", import.meta.url), { with: { type: "json" } })
-).default.apis.value;
-// @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
-const ssrPages = (
-  await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } })
-).default.filter((page) => page.isSSR && !page.hasStaticParams);
+const apiRoutes = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
+(await import(new URL("../../public/manifest.json", import.meta.url), { with: { type: "json" } }))
+  .default.apis.value;
+const ssrPages = getDynamicPages({ config: { prerender: true }, graph });
 
 // https://sst.dev/docs/component/aws/apigatewayv2
 // https://sst.dev/docs/component/aws/function
