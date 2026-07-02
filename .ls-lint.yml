@@ -15,5 +15,6 @@ ignore:
   - .git
   - .aws-output
   - .greenwood
+  - .sst
   - node_modules
   - public

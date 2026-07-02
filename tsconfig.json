@@ -10,8 +10,9 @@
     "noImplicitAny": true,
     "noEmit": true,
     "strict": true,
+    "skipLibCheck": true,
     "jsx": "preserve",
     "jsxImportSource": "wc-compiler"
   },
-  "exclude": ["./public", "./.greenwood", "./reports", "node_modules"]
+  "exclude": ["./public", "./.greenwood", "./reports", "./.sst", "node_modules"]
 }

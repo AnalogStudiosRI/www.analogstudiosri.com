@@ -9,6 +9,7 @@ export default tseslint.config(
     ignores: [
       ".aws-output/*",
       ".greenwood/*",
+      ".sst/",
       "node_modules/*",
       "public/*",
       "reports/*",

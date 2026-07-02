@@ -6,16 +6,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node: [24]
-
     steps:
       - uses: actions/checkout@v6
-      - name: Use Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 24
       - name: Installing project dependencies
         run: |
           npm ci
@@ -25,12 +20,14 @@ jobs:
       - name: Format Check
         run: |
           npm run format:check
+      # TODO: restore testing
       # - name: Test
       #   run: |
       #     npm run test
       - name: Build
         run: |
           npm run build
-    # - name: Storybook
-    #   run: |
-    #     npm run storybook:build
+      # TODO: restore storybook
+      # - name: Storybook
+      #   run: |
+      #     npm run storybook:build
