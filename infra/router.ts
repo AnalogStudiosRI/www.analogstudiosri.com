@@ -18,8 +18,8 @@ function getDynamicPages(compilation) {
 }
 
 const graph = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
-(await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } }))
-  .default;
+  (await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } }))
+    .default;
 const ssrPages = getDynamicPages({ config: { prerender: true }, graph });
 const ssrRoutes = {};
 

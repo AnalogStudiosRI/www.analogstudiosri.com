@@ -19,12 +19,12 @@ function getDynamicPages(compilation) {
 }
 
 const graph = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
-(await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } }))
-  .default;
+  (await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } }))
+    .default;
 // TODO need to handle basePath here?  (and / or all adapters?)
 const apiRoutes = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
-(await import(new URL("../../public/manifest.json", import.meta.url), { with: { type: "json" } }))
-  .default.apis.value;
+  (await import(new URL("../../public/manifest.json", import.meta.url), { with: { type: "json" } }))
+    .default.apis.value;
 const ssrPages = getDynamicPages({ config: { prerender: true }, graph });
 
 // https://sst.dev/docs/component/aws/apigatewayv2
