@@ -12,6 +12,6 @@ export default $config({
     };
   },
   async run() {
-    await import("./infra/router.ts")
+    await import("./infra/router.ts");
   },
 });
