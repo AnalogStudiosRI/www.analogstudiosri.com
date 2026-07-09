@@ -1,5 +1,5 @@
-import { frontend } from "./static";
-import { api } from "./api-routes";
+import { frontend } from "./static-site.ts";
+import { api } from "./api-gateway.ts";
 
 // TODO: pull this from Greenwood / config
 function getDynamicPages(compilation) {
