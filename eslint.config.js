@@ -13,6 +13,7 @@ export default tseslint.config(
       "node_modules/*",
       "public/*",
       "reports/*",
+      "sst-env.d.ts",
       "storybook-static/**",
       "patches/**",
     ],
