@@ -5,7 +5,7 @@
 export default $config({
   app(input) {
     return {
-      name: "www-analogstudios-net",
+      name: "as-website",
       removal: input?.stage === "production" ? "retain" : "remove",
       protect: ["production"].includes(input?.stage),
       home: "aws",

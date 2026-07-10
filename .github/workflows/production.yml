@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: 'production'
     permissions:
       id-token: write
 
@@ -26,6 +27,6 @@ jobs:
       - name: Build
         run: |
           npm run build
-      - name: Run SST for production deployment
+      - name: Deploy to Production Environment
         run: |
           npm run deploy:prod

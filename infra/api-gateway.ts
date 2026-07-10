@@ -1,4 +1,6 @@
-export const api = new sst.aws.ApiGatewayV2("Api");
+// API Gateway
+// https://sst.dev/docs/component/aws/apigatewayv2/
+export const gateway = new sst.aws.ApiGatewayV2("AS-Website-Gateway");
 
 const RUNTIME = "nodejs24.x";
 
@@ -36,7 +38,7 @@ ssrPages.forEach((page) => {
         .filter((segment) => segment !== "")
         .join("/")}`;
 
-  api.route(`GET /routes${routePattern}`, {
+  gateway.route(`GET /routes${routePattern}`, {
     bundle: `.aws-output/routes/${id}`,
     handler: "index.handler",
     runtime: RUNTIME,

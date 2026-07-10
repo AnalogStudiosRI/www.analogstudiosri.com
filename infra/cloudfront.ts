@@ -1,5 +1,5 @@
 import { frontend } from "./static-site.ts";
-import { api } from "./api-gateway.ts";
+import { gateway } from "./api-gateway.ts";
 
 // TODO: pull this from Greenwood / config
 function getDynamicPages(compilation) {
@@ -31,7 +31,7 @@ ssrPages.forEach((page) => {
     const basePattern = segment.pathname.replace(`/:${segment.key}/`, "");
 
     ssrRoutes[`${basePattern}/*`] = {
-      url: api.url,
+      url: gateway.url,
       rewrite: {
         regex: `^${basePattern}/(.*)$`,
         to: `/routes${basePattern}/$1`,
@@ -44,7 +44,7 @@ ssrPages.forEach((page) => {
       .join("/")}`;
 
     ssrRoutes[route] = {
-      url: api.url,
+      url: gateway.url,
       rewrite: {
         regex: `^${route}$`,
         to: `/routes/${routePattern}`,
@@ -53,10 +53,17 @@ ssrPages.forEach((page) => {
   }
 });
 
+// CloudFront distribution
 // https://sst.dev/docs/component/aws/router
-export const router = new sst.aws.Router("MyRouter", {
+const backend = process.env.API_BACKEND_HOSTNAME ?? "";
+
+export const router = new sst.aws.Router("AS-Website-Router", {
+  domain: $app.stage === "production" ? "www.analogstudios.net" : undefined,
   routes: {
-    "/api/*": api.url,
+    // proxy actual API requests to our standalone backend
+    "/api/events": `${backend}/api/events`,
+    "/api/posts": `${backend}/api/posts`,
+    "/api/*": gateway.url,
     ...ssrRoutes,
     "/*": frontend.url,
   },

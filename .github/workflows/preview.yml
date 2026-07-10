@@ -5,6 +5,7 @@ on: [pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: 'preview'
     permissions:
       id-token: write
 
@@ -23,6 +24,6 @@ jobs:
       - name: Build
         run: |
           npm run build
-      - name: Run SST for preview deployment
+      - name: Deploy to Preview Environment
         run: |
           npm run deploy:preview
