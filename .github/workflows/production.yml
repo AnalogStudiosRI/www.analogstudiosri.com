@@ -13,9 +13,6 @@ jobs:
       id-token: write
 
     steps:
-      - name: Setup Environment Variables
-        run: |
-          echo "API_BACKEND_HOSTNAME=$API_BACKEND_HOSTNAME"
       - uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-region: ${{ secrets.AWS_REGION }}
@@ -28,6 +25,8 @@ jobs:
         run: |
           npm ci
       - name: Build
+        env:
+          API_BACKEND_HOSTNAME: ${{ vars.API_BACKEND_HOSTNAME }}
         run: |
           npm run build
       - name: Deploy to Production Environment
