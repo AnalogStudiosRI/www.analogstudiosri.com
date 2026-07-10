@@ -25,12 +25,16 @@
     "serve": "greenwood serve",
     "deploy:preview": "sst deploy --stage preview",
     "deploy:prod": "sst deploy --stage production",
-    "lint": "eslint && ls-lint \"./src/**/*.js\" && stylelint \"./src/**/*.css\"",
+    "lint": "npm run lint:js && npm run lint:ls && npm run lint:css",
+    "lint:js": "eslint",
+    "lint:ls": "ls-lint \"./src/**/*.js\"",
+    "lint:css": "stylelint \"./src/**/*.css\"",
     "check": "tsc",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "test": "wtr",
-    "test:tdd": "npm run test --watch"
+    "test:tdd": "npm run test --watch",
+    "prepare": "husky install"
   },
   "dependencies": {
     "bootstrap": "4.0.0-alpha.4",
@@ -53,6 +57,8 @@
     "eslint": "^9.18.0",
     "eslint-plugin-no-only-tests": "^3.3.0",
     "globals": "^15.14.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "prettier": "^3.8.4",
     "rollup-plugin-analyzer": "^4.0.0",
     "rollup-plugin-visualizer": "^7.0.1",
