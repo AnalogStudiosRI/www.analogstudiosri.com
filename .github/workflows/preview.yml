@@ -5,7 +5,7 @@ on: [pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: 'preview'
+    environment: "preview"
     permissions:
       id-token: write
 
