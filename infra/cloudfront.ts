@@ -57,6 +57,8 @@ ssrPages.forEach((page) => {
 // https://sst.dev/docs/component/aws/router
 const backend = process.env.API_BACKEND_HOSTNAME ?? "";
 
+console.log({ backend });
+
 export const router = new sst.aws.Router("AS-Website-Router", {
   domain: $app.stage === "production" ? "www.analogstudios.net" : undefined,
   routes: {
