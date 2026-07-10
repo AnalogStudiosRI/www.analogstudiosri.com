@@ -22,10 +22,10 @@ jobs:
         run: |
           npm ci
       - name: Build
-        env:
-          API_BACKEND_HOSTNAME: ${{ secrets.API_BACKEND_HOSTNAME }}
         run: |
           npm run build
       - name: Deploy to Preview Environment
+        env:
+          API_BACKEND_HOSTNAME: ${{ secrets.API_BACKEND_HOSTNAME }}
         run: |
           npm run deploy:preview
