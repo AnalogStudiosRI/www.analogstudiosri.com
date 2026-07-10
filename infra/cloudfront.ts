@@ -17,11 +17,26 @@ function getDynamicPages(compilation) {
   });
 }
 
+// TODO: pull this from Greenwood / config
+function getStaticPages(compilation) {
+  const { config, graph } = compilation;
+
+  return graph.filter(
+    (page) =>
+      !page.isSSR ||
+      (page.isSSR && page.prerender) ||
+      (page.isSSR && page.prerender !== false && config.prerender) ||
+      page.staticPaths,
+  );
+}
+
 const graph = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
   (await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } }))
     .default;
 const ssrPages = getDynamicPages({ config: { prerender: true }, graph });
 const ssrRoutes = {};
+const staticPages = getStaticPages({ config: { prerender: true }, graph });
+const staticRoutes = {};
 
 // TODO handle base path
 ssrPages.forEach((page) => {
@@ -33,7 +48,8 @@ ssrPages.forEach((page) => {
     ssrRoutes[`${basePattern}/*`] = {
       url: gateway.url,
       rewrite: {
-        regex: `^${basePattern}/(.*)$`,
+        // use the + here to make sure we only match if there is something after the /
+        regex: `^${basePattern}/(.+)$`,
         to: `/routes${basePattern}/$1`,
       },
     };
@@ -53,6 +69,25 @@ ssrPages.forEach((page) => {
   }
 });
 
+staticPages.forEach((page) => {
+  const { route, hasStaticParams, staticPaths, segment } = page;
+
+  if (hasStaticParams) {
+    staticPaths.forEach((path) => {
+      const { key } = segment;
+      const fullPath = route.replace(`[${key}]`, path.params[key]);
+
+      staticRoutes[fullPath] = {
+        url: frontend.url,
+      };
+    });
+  } else {
+    staticRoutes[route] = {
+      url: frontend.url,
+    };
+  }
+});
+
 // CloudFront distribution
 // https://sst.dev/docs/component/aws/router
 const backend = process.env.API_BACKEND_HOSTNAME ?? "";
@@ -64,6 +99,8 @@ export const router = new sst.aws.Router("AS-Website-Router", {
     "/api/events": `${backend}/api/events`,
     "/api/posts": `${backend}/api/posts`,
     "/api/*": gateway.url,
+    // favor static routes first
+    ...staticRoutes,
     ...ssrRoutes,
     "/*": frontend.url,
   },
