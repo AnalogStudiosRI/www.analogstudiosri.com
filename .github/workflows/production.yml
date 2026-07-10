@@ -13,6 +13,9 @@ jobs:
       id-token: write
 
     steps:
+      - name: Setup Environment Variables
+        run: |
+          echo "API_BACKEND_HOSTNAME=$API_BACKEND_HOSTNAME"
       - uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-region: ${{ secrets.AWS_REGION }}
