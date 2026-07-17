@@ -75,7 +75,7 @@ export default class EventDetailsPage extends HTMLElement {
         <meta property="og:title" content="Analog Studios RI - ${event?.title}" />
       </head>
       <body>
-        <div class="as-events-container">
+        <div class="as-events-container as-route-event-details">
           <div id="as-event-detail-container">
             <as-social-share></as-social-share>
             <i class="cal-icon fa fa-calendar-o" style="font-size: 5rem;width:10%"></i>
