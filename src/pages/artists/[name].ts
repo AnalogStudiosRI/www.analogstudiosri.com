@@ -73,27 +73,21 @@ export default class ArtistDetailsPage extends HTMLElement {
     this.innerHTML = `
       <body>
         <div class="container-flex as-route-artist-details">
-          <div class="row">
-
-            <div class="col-xs-4 hidden-sm-down">
-              <as-social-share></as-social-share>
-            </div>
-
-            <div class="col-xs-6">
-
-              <div class="card-row hidden-sm-down">
-                <as-card details="${escapeHtmlAttribute(JSON.stringify(rest))}"></as-card>
-              </div>
-
-              <div class="card-row hidden-md-up">
-                <h4>${this.#artist.name}</h4>
-                <img src="${this.#artist.imageUrl}" alt="${this.#artist.name}"/>
-                <p>${this.#artist.bio}</p>
-              </div>
-
-              ${this.#getAlbumsForArtist()}
-            </div>
+          <div class="col-xs-4 hidden-sm-down">
+            <as-social-share></as-social-share>
           </div>
+
+          <div class="card-row hidden-sm-down">
+            <as-card details="${escapeHtmlAttribute(JSON.stringify(rest))}"></as-card>
+          </div>
+
+          <div class="card-row hidden-md-up mobile-container">
+            <h4>${this.#artist.name}</h4>
+            <img class="mobile-image" src="${this.#artist.imageUrl}" alt="${this.#artist.name}"/>
+            <p>${this.#artist.bio}</p>
+          </div>
+
+          ${this.#getAlbumsForArtist()}
         </div>
       </body>
     `;

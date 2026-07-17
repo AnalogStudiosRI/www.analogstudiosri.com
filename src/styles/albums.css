@@ -14,10 +14,17 @@
     color: var(--color-dark);
     padding-left: 20px;
   }
+}
 
-  & img {
-    max-width: var(--img-width-mobile);
-  }
+.mobile-container {
+  margin: 0 auto;
+  width: 100%;
+  display: block;
+}
+
+.mobile-image {
+  width: 100%;
+  display: block;
 }
 
 @media screen and (min-width: 768px) {

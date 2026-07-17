@@ -60,25 +60,19 @@ export default class AlbumDetailsPage extends HTMLElement {
     this.innerHTML = `
       <body>
         <div class="container-flex as-routes-album-details">
-          <div class="row">
+          <div class="col-xs-4 hidden-sm-down">
+            <as-social-share></as-social-share>
+          </div>
 
-            <div class="col-xs-4 hidden-sm-down">
-              <as-social-share></as-social-share>
-            </div>
+          <div class="card-row hidden-sm-down">
+            ${AlbumDetailsPage.getDownloadLink(this.#album)}
+            <as-card details="${escapeHtmlAttribute(JSON.stringify(rest))}"></as-card>
+          </div>
 
-            <div class="col-xs-6">
-              <div class="card-row hidden-sm-down">
-                ${AlbumDetailsPage.getDownloadLink(this.#album)}
-                <as-card details="${escapeHtmlAttribute(JSON.stringify(rest))}"></as-card>
-              </div>
-
-              <div class="card-row hidden-md-up">
-                <h4>${formattedTitle}</h4>
-                <img src="${this.#album.imageUrl}" alt="${formattedTitle}"/>
-                <p>${this.#album.description}</p>
-              </div>
-            </div>
-
+          <div class="card-row hidden-md-up mobile-container">
+            <h4>${formattedTitle}</h4>
+            <img class="mobile-image" src="${this.#album.imageUrl}" alt="${formattedTitle}"/>
+            <p>${this.#album.description}</p>
           </div>
         </div>
       </body>
