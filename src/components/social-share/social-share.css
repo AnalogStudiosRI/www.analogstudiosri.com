@@ -1,3 +1,8 @@
+.header {
+  width: 100%;
+  font-size: 1.1em;
+}
+
 button {
   background-color: var(--color-tertiary);
   border: 2px solid var(--black) !important;
@@ -10,4 +15,10 @@ svg {
 i.fa {
   color: #00aced;
   width: 1.4rem;
+}
+
+@media screen and (min-width: 1024px) {
+  .header {
+    font-size: 1.3em;
+  }
 }
