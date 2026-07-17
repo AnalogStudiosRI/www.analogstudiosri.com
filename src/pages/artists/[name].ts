@@ -71,6 +71,11 @@ export default class ArtistDetailsPage extends HTMLElement {
     const { link, ...rest } = modelArtist(this.#artist);
 
     this.innerHTML = `
+      <head>
+        <title>Analog Studios RI - ${this.#artist.name}</title>
+        <meta property="og:title" content="Analog Studios RI - ${this.#artist.name}" />
+        <meta name="description" content="${this.#artist.bio}"/>
+      </head>
       <body>
         <div class="container-flex as-route-artist-details">
           <div class="col-xs-4 hidden-sm-down">

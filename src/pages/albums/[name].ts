@@ -58,6 +58,11 @@ export default class AlbumDetailsPage extends HTMLElement {
     const { link, ...rest } = modelAlbum(this.#album);
 
     this.innerHTML = `
+      <head>
+        <title>Analog Studios RI - ${this.#album.title}</title>
+        <meta property="og:title" content="Analog Studios RI - ${this.#album.title}" />
+        <meta name="description" content="${this.#album.description}"/>
+      </head>
       <body>
         <div class="container-flex as-routes-album-details">
           <div class="col-xs-4 hidden-sm-down">

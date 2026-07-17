@@ -24,6 +24,11 @@ export default class ArtistsPage extends HTMLElement {
       .join("\n");
 
     this.innerHTML = `
+      <head>
+        <title>Analog Studios RI - Artists</title>
+        <meta property="og:title" content="Analog Studios RI - Artists" />
+        <meta name="description" content="Browse artists featured at Analog Studios"/>
+      </head>
       <body>
         <div class="container-flex as-route-artists">
           <div class="row">
