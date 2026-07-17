@@ -19,7 +19,7 @@ export default class ArtistsPage extends HTMLElement {
 
     this.innerHTML = `
       <body>
-        <div class="container-flex as-route-artists">
+        <div class="container-flex as-route-albums">
           <div class="row">
 
             <div class="hidden-sm-down col-xs-3">
@@ -30,12 +30,10 @@ export default class ArtistsPage extends HTMLElement {
               ></as-quick-links>
             </div>
 
-            <div class="col-xs-7">
-              <div class="artist-cards-list">
-                ${artistsCardsHtml}
-              </div>
+            <div class="albums-cards-list">
+              ${artistsCardsHtml}
             </div>
-
+          
           </div>
         </div>
       </body>

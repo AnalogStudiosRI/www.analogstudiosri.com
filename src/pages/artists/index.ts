@@ -36,10 +36,8 @@ export default class ArtistsPage extends HTMLElement {
               ></as-quick-links>
             </div>
 
-            <div class="col-xs-7">
-              <div class="artist-cards-list">
-                ${artistsCardsHtml}
-              </div>
+            <div class="artist-cards-list">
+              ${artistsCardsHtml}
             </div>
 
           </div>

@@ -1,5 +1,12 @@
 .as-route-albums {
   color: var(--color-dark);
+
+  & as-card {
+    margin: 0 auto;
+    width: 90%;
+    display: block;
+    text-align: center;
+  }
 }
 
 .as-routes-album-details {
@@ -10,5 +17,24 @@
 
   & img {
     max-width: var(--img-width-mobile);
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .as-route-albums {
+    & as-card {
+      width: 90%;
+      display: inline-block;
+      text-align: left;
+      margin: 4px auto;
+    }
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .as-route-albums {
+    & as-card {
+      width: 90%;
+    }
   }
 }
