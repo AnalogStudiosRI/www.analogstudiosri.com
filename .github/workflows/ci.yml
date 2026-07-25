@@ -17,6 +17,9 @@ jobs:
       - name: Lint
         run: |
           npm run lint
+      - name: Check Types
+        run: |
+          npm run check
       - name: Format Check
         run: |
           npm run format:check

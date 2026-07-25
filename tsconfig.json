@@ -14,5 +14,7 @@
     "jsx": "preserve",
     "jsxImportSource": "wc-compiler"
   },
+  // TODO: add typechecking for SST
+  "include": ["./src"],
   "exclude": ["./public", "./.greenwood", "./reports", "./.sst", "node_modules"]
 }
