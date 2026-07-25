@@ -52,22 +52,11 @@ export default class EventDetailsPage extends HTMLElement {
   async connectedCallback() {
     // TODO: better environment variable management / client side vs SSR
     // https://github.com/ProjectEvergreen/greenwood/discussions/1530
+    // TODO: need to update this when adopting the new domain name, or possibly when bringing over the backend, or use process.env.API_BACKEND_HOSTNAME
     const events = await fetch("http://www.analogstudios.net/api/events")
       .then((resp) => resp.json())
       .then((resp) => resp as Event[]);
-    const event = [
-      ...events,
-      {
-        id: 82,
-        title: "Test Event",
-        description:
-          '\u003Cp\u003EBlissRI is back again for a two-day event!  We will be live-streaming the event so if you can&#39;t make it down, check out the live stream on \u003Ca href="https://www.youtube.com/watch?v=Pkzw1C17Eag"\u003EYouTube\u003C/a\u003E or \u003Ca href="https://www.facebook.com/events/747593301143608/"\u003EFacebook\u003C/a\u003E.\u003C/p\u003E\u003Cimg src="//images.ctfassets.net/kpfxkjvd7pox/1YFY5EZvqgWlaLafANbZEs/ece5d39a0f578a4f2f690663e504e32d/bliss-2025.jpg" loading="lazy"/\u003E\u003Cp\u003E\u003C/p\u003E',
-        startTime: Math.floor(new Date().getTime() / 1000),
-        endTime: Math.floor(new Date().getTime() / 1000) + 3600,
-        createdTime: new Date().toISOString(),
-        tags: [],
-      },
-    ].find((event) => slugifyer(event?.title) === this.#title);
+    const event = events.find((event) => slugifyer(event?.title) === this.#title);
 
     this.innerHTML = `
       <head>
