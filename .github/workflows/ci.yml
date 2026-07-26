@@ -5,6 +5,7 @@ on: [pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: "preview"
 
     steps:
       - uses: actions/checkout@v6
@@ -30,7 +31,7 @@ jobs:
       #     npm run test
       - name: Build
         run: |
-          npm run build
+          npm run build:ci
       # TODO: restore storybook
       # - name: Storybook
       #   run: |
