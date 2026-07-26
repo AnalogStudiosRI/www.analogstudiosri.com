@@ -1,5 +1,5 @@
 import { slugifyer } from "#services/util.ts";
-import type { Event } from "#services/events.ts";
+import { getEvents } from "#services/events.ts";
 
 interface Props {
   params: {
@@ -50,12 +50,7 @@ export default class EventDetailsPage extends HTMLElement {
   }
 
   async connectedCallback() {
-    // TODO: better environment variable management / client side vs SSR
-    // https://github.com/ProjectEvergreen/greenwood/discussions/1530
-    // TODO: need to update this when adopting the new domain name, or possibly when bringing over the backend, or use process.env.API_BACKEND_HOSTNAME
-    const events = await fetch("http://www.analogstudios.net/api/events")
-      .then((resp) => resp.json())
-      .then((resp) => resp as Event[]);
+    const events = await getEvents();
     const event = events.find((event) => slugifyer(event?.title) === this.#title);
 
     this.innerHTML = `

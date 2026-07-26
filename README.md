@@ -24,6 +24,16 @@ $ node -v
 
 Then run `npm ci` to install the project's dependencies.
 
+### Environment Variables
+
+A list of environment variables in a _.env_ file needed to run the project.
+
+| Name                   | Description                             | Notes                                   |
+| ---------------------- | --------------------------------------- | --------------------------------------- |
+| `API_BACKEND_HOSTNAME` | Hostname for the standalone API backend |                                         |
+| `AWS_REGION`           | AWS region for SST                      | Needed for running `npm run deploy:xxx` |
+| `AWS_ROLE_TO_ASSUME`   | IAM Role for running SST                | Needed for running `npm run deploy:xxx` |
+
 ### Tasks
 
 After installing the above, you can run the following key development commands:

@@ -20,9 +20,9 @@
     "#*": "./src/*"
   },
   "scripts": {
-    "dev": "NODE_OPTIONS='--import @greenwood/cli/register' greenwood develop",
+    "dev": "NODE_OPTIONS='--import @greenwood/cli/register' node --env-file=.env ./node_modules/@greenwood/cli/src/bin.js develop",
     "build": "NODE_OPTIONS='--import @greenwood/cli/register' greenwood build",
-    "serve": "greenwood serve",
+    "serve": "node --env-file=.env ./node_modules/@greenwood/cli/src/bin.js serve",
     "deploy:preview": "sst deploy --stage preview",
     "deploy:prod": "sst deploy --stage production",
     "lint": "npm run lint:js && npm run lint:ls && npm run lint:css",
@@ -50,6 +50,7 @@
     "@greenwood/plugin-css-modules": "^0.34.0",
     "@greenwood/plugin-import-jsx": "^0.34.0",
     "@ls-lint/ls-lint": "^1.10.0",
+    "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^6.6.0",
     "@web/test-runner": "^0.18.1",

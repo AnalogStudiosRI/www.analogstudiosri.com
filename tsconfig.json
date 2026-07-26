@@ -12,7 +12,8 @@
     "strict": true,
     "skipLibCheck": true,
     "jsx": "preserve",
-    "jsxImportSource": "wc-compiler"
+    "jsxImportSource": "wc-compiler",
+    "types": ["node"]
   },
   // TODO: add typechecking for SST
   "include": ["./src"],

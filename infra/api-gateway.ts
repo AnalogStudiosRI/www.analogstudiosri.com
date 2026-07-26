@@ -42,5 +42,8 @@ ssrPages.forEach((page) => {
     bundle: `.aws-output/routes/${id}`,
     handler: "index.handler",
     runtime: RUNTIME,
+    environment: {
+      API_BACKEND_HOSTNAME: process.env.API_BACKEND_HOSTNAME ?? "",
+    },
   });
 });
