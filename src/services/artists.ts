@@ -11,7 +11,7 @@ export interface Artist {
   contactEmail?: string;
 }
 
-const ARTISTS_API_URL = "http://www.analogstudios.net/api/artists";
+const ARTISTS_API_URL = `${process.env.API_BACKEND_HOSTNAME}/api/artists`;
 
 // ensure only active artists are shown on the front end
 function isActive(artist: Artist): boolean {

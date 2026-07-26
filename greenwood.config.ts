@@ -37,7 +37,7 @@ const customRollupPlugins: RollupPlugin[] = [
 const config: Config = {
   devServer: {
     proxy: {
-      "/api": "https://www.analogstudios.net",
+      "/api": process.env.API_BACKEND_HOSTNAME ?? "",
     },
   },
   prerender: true,

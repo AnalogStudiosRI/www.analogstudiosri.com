@@ -8,7 +8,7 @@ export interface Album {
   downloadUrl?: string;
 }
 
-const ALBUMS_API_URL = "https://www.analogstudios.net/api/albums";
+const ALBUMS_API_URL = `${process.env.API_BACKEND_HOSTNAME}/api/albums`;
 
 async function getAlbums(): Promise<Album[]> {
   return fetch(ALBUMS_API_URL).then((resp) => resp.json());
