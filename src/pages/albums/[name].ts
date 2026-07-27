@@ -44,8 +44,15 @@ export default class AlbumDetailsPage extends HTMLElement {
 
   static getDownloadLink(album: Album): string {
     if (album.downloadUrl) {
+      const { downloadUrl } = album;
+      // force album downloads over HTTPs
+      // TODO: would be good to fix this at the source
+      const secureDownloadUrl = album.downloadUrl.startsWith("http://")
+        ? album.downloadUrl.replace("http://", "https://")
+        : downloadUrl;
+
       return `
-        <a class="download-url as-link" href="${album.downloadUrl}" rel="noopener noreferrer">Download Link</a>
+        <a class="download-url as-link" href="${secureDownloadUrl}" rel="noopener noreferrer">Download Link</a>
       `;
     }
     return "";
