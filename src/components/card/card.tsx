@@ -13,7 +13,7 @@ interface Details {
 
 function modelAlbum(album: Album) {
   return {
-    imagePath: album ? album.imageUrl : "",
+    imagePath: album?.imageUrl ? album.imageUrl.replace("http://", "https://") : "",
     headingText: album ? album.title : "",
     bodyText: album ? album.description : "",
     imageAltText: album ? album.title : "",
@@ -23,7 +23,7 @@ function modelAlbum(album: Album) {
 
 function modelArtist(artist: Artist) {
   return {
-    imagePath: artist ? artist.imageUrl : "",
+    imagePath: artist ? artist.imageUrl.replace("http://", "https://") : "",
     headingText: artist ? artist.name : "",
     bodyText: artist ? artist.bio : "",
     imageAltText: artist ? artist.name : "",
