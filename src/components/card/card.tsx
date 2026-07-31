@@ -11,6 +11,7 @@ interface Details {
   link: string;
 }
 
+// TODO: should fix file hosting HTTPS at the source
 function modelAlbum(album: Album) {
   return {
     imagePath: album?.imageUrl ? album.imageUrl.replace("http://", "https://") : "",
@@ -21,6 +22,7 @@ function modelAlbum(album: Album) {
   };
 }
 
+// TODO: should fix file hosting HTTPS at the source
 function modelArtist(artist: Artist) {
   return {
     imagePath: artist ? artist.imageUrl.replace("http://", "https://") : "",
