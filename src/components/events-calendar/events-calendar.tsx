@@ -5,7 +5,6 @@ import eventsSheet from "../../styles/events.css" with { type: "css" };
 import themeSheet from "../../styles/theme.css" with { type: "css" };
 import { slugifyer } from "../../services/util.ts";
 import type { Event } from "#services/events.ts";
-
 interface Day {
   date: number | null;
   hasEvents: boolean;
@@ -13,7 +12,6 @@ interface Day {
 }
 
 type Week = Day[];
-
 export class EventsCalendarComponent extends HTMLElement {
   #DAYS_IN_WEEK = 7;
   #MAX_CALENDAR_SPACES = 42;
