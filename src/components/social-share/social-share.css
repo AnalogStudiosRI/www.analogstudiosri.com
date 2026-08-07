@@ -1,6 +1,7 @@
 .header {
   width: 100%;
-  font-size: 1.1em;
+  font-size: clamp(1.1rem, 2vw, 1.85rem);
+  white-space: nowrap;
 }
 
 button {
@@ -15,10 +16,4 @@ svg {
 i.fa {
   color: #00aced;
   width: 1.4rem;
-}
-
-@media screen and (min-width: 1024px) {
-  .header {
-    font-size: 1.3em;
-  }
 }
