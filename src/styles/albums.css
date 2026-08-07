@@ -14,6 +14,15 @@
     color: var(--color-dark);
     padding-left: 20px;
   }
+
+  & .details-card as-card {
+    display: block;
+  }
+
+  & .details-card as-card .container {
+    max-width: 100%;
+    width: 100%;
+  }
 }
 
 .mobile-container {

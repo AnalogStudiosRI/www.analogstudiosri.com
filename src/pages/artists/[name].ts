@@ -78,12 +78,14 @@ export default class ArtistDetailsPage extends HTMLElement {
       </head>
       <body>
         <div class="container-flex as-route-artist-details">
-          <div class="col-xs-4 hidden-sm-down">
-            <as-social-share></as-social-share>
-          </div>
+          <div class="row details-row hidden-sm-down">
+            <div class="col-xs-4">
+              <as-social-share></as-social-share>
+            </div>
 
-          <div class="card-row hidden-sm-down">
-            <as-card details="${escapeHtmlAttribute(JSON.stringify(rest))}"></as-card>
+            <div class="col-xs-8 details-card">
+              <as-card details="${escapeHtmlAttribute(JSON.stringify(rest))}"></as-card>
+            </div>
           </div>
 
           <div class="card-row hidden-md-up mobile-container">
