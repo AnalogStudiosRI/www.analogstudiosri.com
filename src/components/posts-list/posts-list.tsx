@@ -3,8 +3,6 @@ import { getPosts } from "../../services/posts.ts";
 import type { Post } from "../../services/posts.ts";
 import postsListSheet from "./posts-list.css" with { type: "css" };
 import themeSheet from "../../styles/theme.css" with { type: "css" };
-
-// TODO: could this be as gwd-data-static / css modules
 export default class PostsListComponent extends HTMLElement {
   #posts: Post[] = [];
   #max = 0;

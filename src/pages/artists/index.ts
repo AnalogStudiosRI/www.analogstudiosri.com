@@ -3,6 +3,7 @@ import { modelArtist } from "#components/card/card.tsx";
 import { slugifyer, escapeHtmlAttribute } from "#services/util.ts";
 // TODO: import alias (#) does not seem to work here with WCC
 // import '#components/card/card.tsx';
+// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/25
 import "../../components/card/card.tsx";
 import "../../components/quick-links/quick-links.tsx";
 

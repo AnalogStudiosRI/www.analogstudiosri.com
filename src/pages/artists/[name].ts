@@ -6,6 +6,7 @@ import type { Artist } from "#services/artists.ts";
 import type { Album } from "#services/albums.ts";
 // TODO: import alias (#) does not seem to work here with WCC
 // import '#components/card/card.tsx';
+// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/25
 import "../../components/card/card.tsx";
 import type {
   GetStaticPaths,

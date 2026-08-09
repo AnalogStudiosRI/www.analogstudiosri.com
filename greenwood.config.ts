@@ -5,7 +5,6 @@ import analyze from "rollup-plugin-analyzer";
 import { visualizer } from "rollup-plugin-visualizer";
 import type { Config, RollupPlugin } from "@greenwood/cli";
 
-// TODO: are these still working?
 const customRollupPlugins: RollupPlugin[] = [
   {
     type: "rollup",

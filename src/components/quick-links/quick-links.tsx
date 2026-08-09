@@ -28,7 +28,6 @@ export default class QuickLinks extends HTMLElement {
     }
   }
 
-  // TODO: figure out why this is not working and enable the feature
   selectOption(event: Event) {
     const selectedLink = this.links.find(
       (link) => link.route === (event.target as HTMLSelectElement).value,

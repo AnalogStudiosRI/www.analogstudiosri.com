@@ -4,6 +4,7 @@ import { getAlbums, getAlbumById } from "#services/albums.ts";
 import type { Album } from "#services/albums.ts";
 // TODO: import alias (#) does not seem to work here with WCC
 // import '#components/card/card.tsx';
+// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/25
 import "../../components/card/card.tsx";
 import type {
   GetStaticPaths,
@@ -47,6 +48,7 @@ export default class AlbumDetailsPage extends HTMLElement {
       const { downloadUrl } = album;
       // force album downloads over HTTPs
       // TODO: would be good to fix this at the source
+      // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/19
       const secureDownloadUrl = album.downloadUrl.startsWith("http://")
         ? album.downloadUrl.replace("http://", "https://")
         : downloadUrl;

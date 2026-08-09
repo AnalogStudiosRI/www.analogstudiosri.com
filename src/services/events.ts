@@ -9,10 +9,8 @@ interface Event {
 }
 
 const EVENTS_API_PATH = "/api/events";
-// handle for isomorphic data fetching
-// TODO: better environment variable management / client side vs SSR
-// https://github.com/ProjectEvergreen/greenwood/discussions/1530
-// TODO: need to update this when adopting the new domain name, or possibly when bringing over the backend, or use process.env.API_BACKEND_HOSTNAME
+// TODO: handle for isomorphic data fetching
+// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/11
 const EVENTS_API_URL =
   typeof window === "undefined"
     ? `${process.env.API_BACKEND_HOSTNAME}${EVENTS_API_PATH}`

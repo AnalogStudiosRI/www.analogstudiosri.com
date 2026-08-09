@@ -1,8 +1,6 @@
 import type { Artist } from "#services/artists.ts";
 import type { Album } from "#services/albums.ts";
 import { slugifyer } from "#services/util.ts";
-// TODO: CSS Module Scripts do not work with SSR pages
-
 interface Details {
   imagePath: string;
   headingText: string;
@@ -12,6 +10,7 @@ interface Details {
 }
 
 // TODO: should fix file hosting HTTPS at the source
+// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/19
 function modelAlbum(album: Album) {
   return {
     imagePath: album?.imageUrl ? album.imageUrl.replace("http://", "https://") : "",
@@ -23,6 +22,7 @@ function modelAlbum(album: Album) {
 }
 
 // TODO: should fix file hosting HTTPS at the source
+// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/19
 function modelArtist(artist: Artist) {
   return {
     imagePath: artist ? artist.imageUrl.replace("http://", "https://") : "",
@@ -56,6 +56,7 @@ export class CardComponent extends HTMLElement {
       `;
 
     // TODO: # private references don't work with WCC?
+    // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/20
     return (
       <div class="container as-card">
         <div class="row">

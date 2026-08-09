@@ -14,6 +14,7 @@ declare global {
 }
 
 // TODO: get types from web-social-share package instead of defining our own here
+// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/21
 interface ShareConfig {
   displayNames: boolean;
   config: Array<{
@@ -25,6 +26,7 @@ interface ShareConfig {
 
 export default class SocialShare extends HTMLElement {
   // TODO: use a signal for show / hide?
+  // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/22
   #show: boolean = false;
   #shareConfig: ShareConfig;
 
@@ -63,7 +65,7 @@ export default class SocialShare extends HTMLElement {
     this?.shadowRoot?.adoptedStyleSheets?.push(themeSheet, socialShareSheet);
     this.render();
 
-    // TODO: temp workaround for https://github.com/AnalogStudiosRI/www.analogstudios.net/pull/112#issuecomment-4564633209
+    // TODO: temp workaround for https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/23
     if (typeof window !== "undefined") {
       defineCustomElement();
 

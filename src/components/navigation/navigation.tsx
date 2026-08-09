@@ -15,6 +15,7 @@ export default class Navigation extends HTMLElement {
   }
 
   // TODO: get navigation from a content collection
+  // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/13
   render() {
     return (
       <nav>

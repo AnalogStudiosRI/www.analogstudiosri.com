@@ -146,12 +146,14 @@ export class EventsCalendarComponent extends HTMLElement {
   }
 
   // TODO: private methods are not supported by WCC <> JSX event handlers
+  // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/20
   shiftToPreviousMonth(): void {
     this.#calculatePreviousMonth();
     this.render();
   }
 
   // TODO: private methods are not supported by WCC <> JSX event handlers
+  // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/20
   shiftToNextMonth(): void {
     this.#calculateNextMonth();
     this.render();
