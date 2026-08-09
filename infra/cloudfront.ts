@@ -93,7 +93,7 @@ staticPages.forEach((page) => {
 const backend = process.env.API_BACKEND_HOSTNAME ?? "";
 
 export const router = new sst.aws.Router("AS-Website-Router", {
-  domain: $app.stage === "production" ? "www.analogstudios.net" : undefined,
+  domain: $app.stage === "production" ? "www.analogstudiosri.com" : undefined,
   routes: {
     // proxy actual API requests to our standalone backend
     "/api/events": `${backend}/api/events`,

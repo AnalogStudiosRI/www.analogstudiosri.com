@@ -1,13 +1,8 @@
-# www.analogstudios.net
-
-[![GitHub release](https://img.shields.io/github/tag/AnalogStudiosRI/www.analogstudios.net.svg)](https://github.com/AnalogStudiosRI/www.analogstudios.net/tags)
-![GitHub Actions status](https://github.com/AnalogStudiosRI/www.analogstudios.net/workflows/Main%20Integration/badge.svg)
-[![GitHub issues](https://img.shields.io/github/issues-pr-raw/AnalogStudiosRI/www.analogstudios.net.svg)](https://github.com/AnalogStudiosRI/www.analogstudios.net/issues)
-[![GitHub license](https://img.shields.io/badge/license-Apache2.0-blue.svg)](https://raw.githubusercontent.com/AnalogStudiosRI/www.analogstudios.net/master/LICENSE.md)
+# www.analogstudiosri.com
 
 ## Overview
 
-Frontend website for [www.analogstudiosri.net](https://www.analogstudios.net) based on [Greenwood](https://www.greenwoodjs.io). It is built and deployed using Github Actions to AWS (S3 / Cloudfront / Lambda) using SST. The [backend](https://github.com/AnalogStudiosRI/api) uses and AWS (API Gateway / Lambda) with [Architect](https://arc.codes/).
+Frontend website for [www.analogstudiosri.com](www.analogstudiosri.com) built with [Greenwood](https://www.greenwoodjs.io). It is deployed using Github Actions to AWS (S3 / Cloudfront / Lambda) using SST. The [backend](https://github.com/AnalogStudiosRI/api) uses and AWS (API Gateway / Lambda) with [Architect](https://arc.codes/).
 
 ## Contributing
 
