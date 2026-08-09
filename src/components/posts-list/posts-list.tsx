@@ -1,4 +1,5 @@
 // TODO: page load hangs if we use import aliases (e.g. #)
+// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/25
 import { getPosts } from "../../services/posts.ts";
 import type { Post } from "../../services/posts.ts";
 import postsListSheet from "./posts-list.css" with { type: "css" };

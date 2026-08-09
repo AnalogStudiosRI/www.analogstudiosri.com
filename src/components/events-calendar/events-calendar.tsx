@@ -1,4 +1,5 @@
 // TODO: page load hangs if we use import aliases (e.g. #)
+// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/25
 import { getEvents } from "../../services/events.ts";
 import eventsCalendarSheet from "./events-calendar.css" with { type: "css" };
 import eventsSheet from "../../styles/events.css" with { type: "css" };
