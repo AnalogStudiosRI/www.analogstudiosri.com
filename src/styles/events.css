@@ -16,7 +16,7 @@
 }
 
 #as-event-info {
-  margin: 1rem;
+  margin: 0 1rem 0;
 
   & a {
     color: var(--color-tertiary);
