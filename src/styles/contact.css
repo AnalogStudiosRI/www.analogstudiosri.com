@@ -34,4 +34,25 @@
   button[type="submit"] {
     display: block;
   }
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    line-height: 1.5;
+
+    p,
+    & form {
+      width: 100%;
+    }
+
+    & form {
+      padding-left: 0;
+    }
+
+    & input:not([type="hidden"]),
+    & textarea {
+      box-sizing: border-box;
+      width: 100%;
+      font-size: 1rem;
+    }
+  }
 }
