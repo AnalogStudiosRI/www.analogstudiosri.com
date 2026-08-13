@@ -1,0 +1,61 @@
+.as-route-artists {
+  color: var(--color-dark);
+
+  & .artist-cards-list {
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  & as-card {
+    margin: 0 auto;
+    width: 90%;
+    display: block;
+    text-align: center;
+  }
+}
+
+.as-route-artist-details {
+  & .download-url {
+    color: var(--color-dark);
+    padding-left: 20px;
+  }
+
+  & .details-card as-card {
+    display: block;
+  }
+
+  & .details-card as-card .container {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+.mobile-container {
+  margin: 0 auto;
+  width: 100%;
+  display: block;
+}
+
+.mobile-image {
+  width: 100%;
+  display: block;
+}
+
+@media screen and (min-width: 768px) {
+  .as-route-artists {
+    & as-card {
+      width: 90%;
+      display: inline-block;
+      text-align: left;
+      margin: 4px auto;
+    }
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .as-route-artists {
+    & as-card {
+      width: 90%;
+    }
+  }
+}

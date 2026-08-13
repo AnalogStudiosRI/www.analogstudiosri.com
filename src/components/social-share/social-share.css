@@ -1,6 +1,12 @@
+.header {
+  width: 100%;
+  font-size: clamp(1.1rem, 2vw, 1.85rem);
+  white-space: nowrap;
+}
+
 button {
   background-color: var(--color-tertiary);
-  border: 2px solid var(--black)!important;
+  border: 2px solid var(--black) !important;
 }
 
 svg {
