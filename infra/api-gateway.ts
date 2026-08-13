@@ -31,14 +31,15 @@ const ssrPages = getDynamicPages({ config: { prerender: true }, graph });
 // NOTE: API Gateway routes can NOT end in a trailing /
 ssrPages.forEach((page) => {
   const { id, segment, route } = page;
+  // Dynamic routes retain their public path; static SSR routes can use an internal namespace.
   const routePattern = segment?.key
     ? segment.pathname.replace(`:${segment.key}/`, "{proxy+}") // we use proxy+ to match everything, including trailing /
-    : `/${route
+    : `/routes/${route
         .split("/")
         .filter((segment) => segment !== "")
         .join("/")}`;
 
-  gateway.route(`GET /routes${routePattern}`, {
+  gateway.route(`GET ${routePattern}`, {
     bundle: `.aws-output/routes/${id}`,
     handler: "index.handler",
     runtime: RUNTIME,
