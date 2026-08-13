@@ -1,11 +1,11 @@
 {
-  "name": "www.analogstudios.net",
+  "name": "www.analogstudiosri.com",
   "version": "2.0.0",
   "private": true,
-  "description": "Frontend website for www.analogstudios.net.",
+  "description": "Frontend website for www.analogstudiosri.net.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AnalogStudiosRI/www.analogstudios.net.git"
+    "url": "git+https://github.com/AnalogStudiosRI/www.analogstudiosri.com.git"
   },
   "type": "module",
   "keywords": [
@@ -13,7 +13,7 @@
     "Analog",
     "Rhode Island"
   ],
-  "homepage": "https://github.com/AnalogStudiosRI/www.analogstudios.net#readme",
+  "homepage": "https://github.com/AnalogStudiosRI/www.analogstudiosri.com#readme",
   "author": "Owen Buckley <analogstudiosri@gmail.com>",
   "license": "Apache-2.0",
   "imports": {
