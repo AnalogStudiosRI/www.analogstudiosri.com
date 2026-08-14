@@ -22,11 +22,9 @@ function getDynamicPages(compilation) {
   });
 }
 
-// TODO need to handle basePath here?  (and / or all adapters?)
 const graph = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
   (await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } }))
     .default;
-// TODO need to handle basePath here?  (and / or all adapters?)
 // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
 const apiRoutes = (
   await import(new URL("../../public/manifest.json", import.meta.url), { with: { type: "json" } })
