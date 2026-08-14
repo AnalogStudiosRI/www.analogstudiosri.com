@@ -1,3 +1,5 @@
+import { email } from "./ses.ts";
+
 // API Gateway
 // https://sst.dev/docs/component/aws/apigatewayv2/
 export const gateway = new sst.aws.ApiGatewayV2("AS-Website-Gateway");
@@ -38,10 +40,14 @@ ssrPages.forEach((page) => {
         .filter((segment) => segment !== "")
         .join("/")}`;
 
+  // map SES to contact API route
+  const link = id === "contact" ? [email] : [];
+
   gateway.route(`GET /routes${routePattern}`, {
     bundle: `.aws-output/routes/${id}`,
     handler: "index.handler",
     runtime: RUNTIME,
+    link,
     environment: {
       API_BACKEND_HOSTNAME: process.env.API_BACKEND_HOSTNAME ?? "",
     },
