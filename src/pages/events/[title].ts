@@ -62,7 +62,6 @@ export default class EventDetailsPage extends HTMLElement {
         <div class="as-events-container as-route-event-details">
           <div id="as-event-detail-container">
             <as-social-share></as-social-share>
-            <i class="cal-icon fa fa-calendar-o" style="font-size: 5rem;width:10%"></i>
             <div id="as-event-info">
               <p>Event Title: ${event?.title}</p>
               <p>Event Date: ${this.formatEventTime(event?.startTime)}</p>
