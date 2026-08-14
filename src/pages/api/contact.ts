@@ -29,14 +29,16 @@ export async function handler(request: Request) {
 
   await client.send(
     new SendEmailCommand({
+      // @ts-expect-error - figure out types for SST
       FromEmailAddress: Resource.MyEmail.sender,
       Destination: {
+        // @ts-expect-error - figure out types for SST
         ToAddresses: [Resource.MyEmail.sender],
       },
       Content: {
         Simple: {
           Subject: {
-            Data: subject,
+            Data: `[website contact form] ${subject}`,
           },
           Body: {
             Text: {
