@@ -1,4 +1,8 @@
 // TODO: rename from MyEmail (to ContactEmail)
-export const email = new sst.aws.Email("MyEmail", {
-  sender: process.env.CONTACT_EMAIL ?? "",
-});
+const name = "MyEmail";
+const sender = process.env.CONTACT_EMAIL ?? "";
+
+export const email =
+  $app.stage === "production"
+    ? new sst.aws.Email(name, { sender })
+    : sst.aws.Email.get(name, sender);
