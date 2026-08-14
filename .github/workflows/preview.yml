@@ -29,5 +29,6 @@ jobs:
       - name: Deploy to Preview Environment
         env:
           API_BACKEND_HOSTNAME: ${{ secrets.API_BACKEND_HOSTNAME }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
         run: |
           npm run deploy:preview
