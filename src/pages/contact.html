@@ -3,6 +3,7 @@
     <title>Analog Studios RI - Contact</title>
     <meta property="og:title" content="Analog Studios RI - Contact" />
     <link rel="stylesheet" href="../styles/contact.css" />
+    <script type="module" src="../scripts/contact.ts"></script>
   </head>
   <body>
     <div class="as-route-contact">
@@ -11,6 +12,10 @@
         Analog Studios is located in Newport RI and run by Owen Buckley and Dave Flamand. Please use
         the contact form below to send us a message!
       </p>
+
+      <br />
+
+      <p id="feedback"></p>
 
       <form name="contact" method="post">
         <label for="subject">Subject</label>
@@ -22,8 +27,7 @@
         <label for="message">Message:</label>
         <textarea name="message" required></textarea>
 
-        <!-- Netlify hidden form for the contact page -->
-        <input type="hidden" name="form-name" value="contact" />
+        <input type="hidden" name="info" />
 
         <button class="btn" type="submit">Send</button>
       </form>
