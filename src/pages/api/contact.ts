@@ -24,7 +24,6 @@ export async function handler(request: Request) {
 
   console.log("send email -> ", { subject, email, message });
 
-  // TODO: where do we put the users emails?
   const client = new SESv2Client();
 
   await client.send(
