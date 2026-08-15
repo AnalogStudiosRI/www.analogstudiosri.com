@@ -116,4 +116,26 @@ describe("Contact API", () => {
     assert.strictEqual(response.statusText, "");
     assert.strictEqual(sendMock.mock.callCount(), 0);
   });
+
+  it("should return as 404 not found if the method is not POST", async () => {
+    const request = new Request("http://localhost:8080/api/contact");
+    const response = await handler(request);
+
+    assert.strictEqual(response.ok, false);
+    assert.strictEqual(response.status, 404);
+    assert.strictEqual(response.statusText, "Not Found");
+    assert.strictEqual(sendMock.mock.callCount(), 0);
+  });
+
+  it("should catch an error while processing the form", async () => {
+    const request = new Request("http://localhost:8080/api/contact", {
+      method: "POST",
+    });
+    const response = await handler(request);
+
+    assert.strictEqual(response.ok, false);
+    assert.strictEqual(response.status, 500);
+    assert.strictEqual(response.statusText, "Internal Service Error");
+    assert.strictEqual(sendMock.mock.callCount(), 0);
+  });
 });
