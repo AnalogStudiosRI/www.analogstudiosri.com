@@ -28,6 +28,8 @@ globalThis.addEventListener("DOMContentLoaded", () => {
           : "Sorry, there was an error with your submission.";
 
         feedback.style.display = "block";
+      } else {
+        console.warn("invalid form submission detected");
       }
     } else {
       console.warn("form element not found!!!");
