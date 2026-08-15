@@ -1,8 +1,7 @@
 export default {
   "*.js": ["npm run lint:js --"],
-  "*.ts": ["npm run lint:ts --"],
   "*.css": ["npm run lint:css --"],
-  // TODO: '*.ts': ['npm run check --'],
-  // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/26
+  // https://github.com/lint-staged/lint-staged#example-run-tsc-on-changes-to-typescript-files-but-do-not-pass-any-filename-arguments
+  "*.{ts,tsx}": [() => "npm run check"],
   "*.*": ["npm run lint:ls --", "npm run format --"],
 };
