@@ -4,6 +4,7 @@ import { defineCustomElement } from "web-social-share";
 
 // web social share's exports overrides its own types field
 // so have to craft it like this instead
+// https://app.unpkg.com/web-social-share@10.0.0/files/package.json#L6
 type ShareConfig = HTMLWebSocialShareElement["share"];
 
 declare global {
