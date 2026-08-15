@@ -27,6 +27,7 @@ globalThis.addEventListener("DOMContentLoaded", () => {
           ? "Thank you for you contacting us!"
           : "Sorry, there was an error with your submission.";
 
+        form.style.display = "none";
         feedback.style.display = "block";
       } else {
         console.warn("invalid form submission detected");
