@@ -22,7 +22,7 @@ class SendEmailCommandMock {
 mock.module("sst", {
   namedExports: {
     Resource: {
-      MyEmail: { sender },
+      ContactFormEmail: { sender },
     },
   },
 });
