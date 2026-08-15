@@ -29,10 +29,8 @@ export async function handler(request: Request) {
 
   await client.send(
     new SendEmailCommand({
-      // @ts-expect-error - figure out types for SST
       FromEmailAddress: Resource.MyEmail.sender,
       Destination: {
-        // @ts-expect-error - figure out types for SST
         ToAddresses: [Resource.MyEmail.sender],
       },
       Content: {
@@ -42,7 +40,7 @@ export async function handler(request: Request) {
           },
           Body: {
             Text: {
-              Data: message,
+              Data: [`New message from: ${email}`, "", message.trim()].join("\n"),
             },
           },
         },

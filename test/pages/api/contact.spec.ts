@@ -75,7 +75,7 @@ describe("Contact API", () => {
           },
           Body: {
             Text: {
-              Data: message,
+              Data: [`New message from: ${email}`, "", message.trim()].join("\n"),
             },
           },
         },
