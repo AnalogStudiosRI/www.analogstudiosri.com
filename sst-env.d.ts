@@ -18,7 +18,7 @@ declare module "sst" {
       type: "sst.aws.StaticSite";
       url: string;
     };
-    MyEmail: {
+    ContactFormEmail: {
       configSet: string;
       sender: string;
       type: "sst.aws.Email";

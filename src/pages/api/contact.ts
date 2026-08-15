@@ -29,9 +29,9 @@ export async function handler(request: Request) {
 
   await client.send(
     new SendEmailCommand({
-      FromEmailAddress: Resource.MyEmail.sender,
+      FromEmailAddress: Resource.ContactFormEmail.sender,
       Destination: {
-        ToAddresses: [Resource.MyEmail.sender],
+        ToAddresses: [Resource.ContactFormEmail.sender],
       },
       Content: {
         Simple: {

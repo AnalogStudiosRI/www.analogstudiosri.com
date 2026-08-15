@@ -1,5 +1,4 @@
-// TODO: rename from MyEmail (to ContactEmail)
-const name = "MyEmail";
+const name = "ContactFormEmail";
 const sender = process.env.CONTACT_EMAIL ?? "";
 
 export const email =
