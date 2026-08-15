@@ -15,7 +15,7 @@ export default class Footer extends HTMLElement {
       <footer class={styles.container}>
         <section>
           <article class="col-xs-12">
-            <h3>Socials Social</h3>
+            <h3>Socials</h3>
             <ul class="socials">
               <li>
                 <a
