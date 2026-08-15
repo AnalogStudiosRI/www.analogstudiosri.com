@@ -16,6 +16,6 @@
     "types": ["node"]
   },
   // TODO: add typechecking for SST
-  "include": ["./src", "greenwood.config.ts"],
+  "include": ["./src", "./test", "greenwood.config.ts", "sst-env.d.ts"],
   "exclude": ["./public", "./.greenwood", "./reports", "./.sst", "node_modules"]
 }

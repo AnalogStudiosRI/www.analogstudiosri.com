@@ -11,7 +11,7 @@ export async function handler(request: Request) {
   // return early for the honeypot
   if (info) {
     console.warn("honey pot detected", { subject, email, message, info });
-    return new Response("OK");
+    return new Response();
   }
 
   if (!subject || !email || !message) {
@@ -50,5 +50,7 @@ export async function handler(request: Request) {
     }),
   );
 
-  return new Response("OK");
+  return new Response("Success", {
+    statusText: "Successful submission",
+  });
 }

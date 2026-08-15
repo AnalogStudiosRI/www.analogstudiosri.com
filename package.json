@@ -33,8 +33,10 @@
     "check": "tsc",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "wtr",
-    "test:tdd": "npm run test --watch",
+    "test": "npm run test:backend",
+    "test:frontend": "wtr",
+    "test:frontend:tdd": "npm run test --watch",
+    "test:backend": "node --experimental-test-module-mocks --test",
     "prepare": "husky install"
   },
   "dependencies": {
