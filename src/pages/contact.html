@@ -13,17 +13,17 @@
         the contact form below to send us a message!
       </p>
 
-      <p id="feedback"></p>
+      <p id="feedback" aria-live="polite"></p>
 
       <form name="contact" method="post">
         <label for="subject">Subject</label>
-        <input name="subject" type="text" required />
+        <input id="subject" name="subject" type="text" required />
 
         <label for="email">Email</label>
-        <input name="email" type="email" required />
+        <input id="email" name="email" type="email" required />
 
         <label for="message">Message:</label>
-        <textarea name="message" required></textarea>
+        <textarea id="message" name="message" required></textarea>
 
         <input type="hidden" name="info" />
 
