@@ -28,6 +28,7 @@ A list of environment variables in a _.env_ file needed to run the project.
 | `API_BACKEND_HOSTNAME` | Hostname for the standalone API backend |                                         |
 | `AWS_REGION`           | AWS region for SST                      | Needed for running `npm run deploy:xxx` |
 | `AWS_ROLE_TO_ASSUME`   | IAM Role for running SST                | Needed for running `npm run deploy:xxx` |
+| `CONTACT_EMAIL`        | The "to:" email for the contact form    | Needed for running `npm run deploy:xxx` |
 
 ### Tasks
 
@@ -40,3 +41,14 @@ After installing the above, you can run the following key development commands:
 - `npm run format` - Format all files
 
 > _See `package.json#scripts` for a full list of available commands._
+
+### Contact Form
+
+To test the contact form, you'll have to have a proper AWS config file setup and run the project with SST.
+
+```sh
+$ npm run build
+$ npx sst dev
+```
+
+You can then open `localhost:1984` in the browser and send emails.

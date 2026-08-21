@@ -13,5 +13,6 @@ export default $config({
   },
   async run() {
     await import("./infra/cloudfront.ts");
+    await import("./infra/ses.ts");
   },
 });

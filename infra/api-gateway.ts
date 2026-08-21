@@ -1,3 +1,5 @@
+import { email } from "./ses.ts";
+
 // API Gateway
 // https://sst.dev/docs/component/aws/apigatewayv2/
 export const gateway = new sst.aws.ApiGatewayV2("AS-Website-Gateway");
@@ -20,10 +22,13 @@ function getDynamicPages(compilation) {
   });
 }
 
-// TODO need to handle basePath here?  (and / or all adapters?)
 const graph = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
   (await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } }))
     .default;
+// @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
+const apiRoutes = (
+  await import(new URL("../../public/manifest.json", import.meta.url), { with: { type: "json" } })
+).default.apis.value;
 const ssrPages = getDynamicPages({ config: { prerender: true }, graph });
 
 // https://sst.dev/docs/component/aws/apigatewayv2
@@ -45,5 +50,20 @@ ssrPages.forEach((page) => {
     environment: {
       API_BACKEND_HOSTNAME: process.env.API_BACKEND_HOSTNAME ?? "",
     },
+  });
+});
+
+apiRoutes.forEach((apiRoute) => {
+  const [route, { id }] = apiRoute;
+
+  // map SES to contact API route
+  const link = id === "contact" ? [email] : [];
+
+  // swap out [] for {} in route for AWS API Gateway compatibility
+  gateway.route(`ANY ${route.replace("[", "{").replace("]", "}")}`, {
+    bundle: `.aws-output/api/${id}`,
+    handler: "index.handler",
+    runtime: RUNTIME,
+    link,
   });
 });

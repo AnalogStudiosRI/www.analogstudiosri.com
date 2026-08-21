@@ -33,11 +33,14 @@
     "check": "tsc",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "wtr",
-    "test:tdd": "npm run test --watch",
+    "test": "npm run test:backend",
+    "test:frontend": "wtr",
+    "test:frontend:tdd": "npm run test --watch",
+    "test:backend": "node --experimental-test-module-mocks --test",
     "prepare": "husky install"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1110.0",
     "bootstrap": "4.0.0-alpha.4",
     "font-awesome": "4.6.3",
     "web-social-share": "^10.0.0"
@@ -51,7 +54,7 @@
     "@greenwood/plugin-css-modules": "^0.34.0",
     "@greenwood/plugin-import-jsx": "^0.34.0",
     "@ls-lint/ls-lint": "^1.10.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.13.3",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^6.6.0",
     "@web/test-runner": "^0.18.1",

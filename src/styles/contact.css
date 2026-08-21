@@ -56,3 +56,14 @@
     }
   }
 }
+
+p#feedback {
+  display: none;
+  width: 60%;
+  background-color: var(--creme);
+  border-radius: 10px;
+  padding: 20px;
+  border: 2px dotted black;
+  margin: 30px auto;
+  text-align: center;
+}

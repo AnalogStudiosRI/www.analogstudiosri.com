@@ -16,6 +16,8 @@
     "types": ["node"]
   },
   // TODO: add typechecking for SST
-  "include": ["./src", "greenwood.config.ts"],
+  // sst-env.d.ts should be committed
+  // https://sst.dev/docs/linking/#generating-types
+  "include": ["./src", "./test", "greenwood.config.ts", "sst-env.d.ts"],
   "exclude": ["./public", "./.greenwood", "./reports", "./.sst", "node_modules"]
 }
