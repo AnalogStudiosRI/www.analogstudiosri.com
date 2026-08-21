@@ -1,3 +1,5 @@
+// TODO: waiting for TypeScript configuration files support
+// https://github.com/modernweb-dev/web/issues/2465
 import fs from "fs/promises";
 import { defaultReporter } from "@web/test-runner";
 import { junitReporter } from "@web/test-runner-junit-reporter";
@@ -7,6 +9,7 @@ const compilerOptions = (
   await import(new URL("./tsconfig.json", import.meta.url), { with: { type: "json" } })
 ).default.compilerOptions;
 
+/** @type {import('@web/test-runner').TestRunnerConfig} */
 export default {
   files: "./src/**/*.spec.js",
   nodeResolve: true,
