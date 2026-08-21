@@ -2,6 +2,11 @@ import socialShareSheet from "./social-share.css" with { type: "css" };
 import themeSheet from "../../styles/theme.css" with { type: "css" };
 import { defineCustomElement } from "web-social-share";
 
+// web social share's exports overrides its own types field
+// so have to craft it like this instead
+// https://app.unpkg.com/web-social-share@10.0.0/files/package.json#L6
+type ShareConfig = HTMLWebSocialShareElement["share"];
+
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -11,17 +16,6 @@ declare global {
       };
     }
   }
-}
-
-// TODO: get types from web-social-share package instead of defining our own here
-// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/21
-interface ShareConfig {
-  displayNames: boolean;
-  config: Array<{
-    [key: string]: {
-      socialShareUrl: string;
-    };
-  }>;
 }
 
 export default class SocialShare extends HTMLElement {
