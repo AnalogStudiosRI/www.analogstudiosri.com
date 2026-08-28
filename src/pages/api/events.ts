@@ -9,7 +9,7 @@ import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
 
 const { CONTENTFUL_SPACE, CONTENTFUL_ACCESS_TOKEN } = process.env;
 
-type Event = {
+interface Event {
   id: number;
   description: string;
   endTime: number;
@@ -17,9 +17,9 @@ type Event = {
   title: string;
   link: string;
   tags: Array<string>;
-};
+}
 
-type EventEntry = {
+interface EventEntry {
   id: contentful.EntryFieldTypes.Number;
   description: contentful.EntryFieldTypes.RichText;
   endTime: contentful.EntryFieldTypes.Date;
@@ -29,12 +29,12 @@ type EventEntry = {
   metadata: {
     tags: Array<string>;
   };
-};
+}
 
-type EventEntrySkeleton = {
+interface EventEntrySkeleton {
   contentTypeId: "event";
   fields: EventEntry;
-};
+}
 
 export async function handler(request: Request) {
   const client = contentful.createClient({

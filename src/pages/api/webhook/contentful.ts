@@ -1,6 +1,6 @@
 import * as AWS from "@aws-sdk/client-cloudfront";
 
-type CloudfrontInvalidationParams = {
+interface CloudfrontInvalidationParams {
   DistributionId: string;
   InvalidationBatch: {
     CallerReference: string;
@@ -9,7 +9,7 @@ type CloudfrontInvalidationParams = {
       Items: Array<string>;
     };
   };
-};
+}
 
 const CONFIG = {
   region: "us-east-1",
