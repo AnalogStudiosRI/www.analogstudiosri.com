@@ -44,7 +44,7 @@ export async function handler(request: Request) {
   const params = new URLSearchParams(request.url.slice(request.url.indexOf("?")));
   const id = params.has("id") ? params.get("id") : null;
   const tag = params.has("tag") ? params.get("tag") : null;
-  const events: Array<Event> = (
+  const events: Event[] = (
     await client.getEntries<EventEntrySkeleton>({ content_type: "event" })
   ).items.map((event): Event => {
     const { id, description, endTime, startTime, title, link } = event.fields;
