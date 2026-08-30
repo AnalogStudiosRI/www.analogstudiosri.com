@@ -29,9 +29,9 @@ jobs:
           npm run build:ci
         env:
           API_BACKEND_HOSTNAME: ${{ secrets.API_BACKEND_HOSTNAME }}
-      # - name: Deploy to Production Environment
-      #   env:
-      #     API_BACKEND_HOSTNAME: ${{ secrets.API_BACKEND_HOSTNAME }}
-      #     CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
-      #   run: |
-      #     npm run deploy:prod
+      - name: Deploy to Production Environment
+        env:
+          API_BACKEND_HOSTNAME: ${{ secrets.API_BACKEND_HOSTNAME }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+        run: |
+          npm run deploy:prod
