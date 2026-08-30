@@ -7,24 +7,24 @@
 declare module "sst" {
   export interface Resource {
     "AS-Website-Gateway": {
-      type: "sst.aws.ApiGatewayV2";
-      url: string;
-    };
+      "type": "sst.aws.ApiGatewayV2"
+      "url": string
+    }
     "AS-Website-Router": {
-      type: "sst.aws.Router";
-      url: string;
-    };
+      "type": "sst.aws.Router"
+      "url": string
+    }
     "AS-Website-Static": {
-      type: "sst.aws.StaticSite";
-      url: string;
-    };
-    ContactFormEmail: {
-      configSet: string;
-      sender: string;
-      type: "sst.aws.Email";
-    };
+      "type": "sst.aws.StaticSite"
+      "url": string
+    }
+    "ContactFormEmail": {
+      "configSet": string
+      "sender": string
+      "type": "sst.aws.Email"
+    }
   }
 }
 
-import "sst";
-export {};
+import "sst"
+export {}
