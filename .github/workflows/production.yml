@@ -27,6 +27,9 @@ jobs:
       - name: Build
         run: |
           npm run build:ci
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_TOKEN: ${{ secrets.DATABASE_TOKEN }}
       - name: Deploy to Production Environment
         env:
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}

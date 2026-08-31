@@ -30,6 +30,9 @@ jobs:
       - name: Build
         run: |
           npm run build:ci
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_TOKEN: ${{ secrets.DATABASE_TOKEN }}
       # TODO: restore storybook
       # - name: Storybook
       #   run: |
