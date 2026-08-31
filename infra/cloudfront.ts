@@ -38,7 +38,6 @@ const ssrRoutes = {};
 const staticPages = getStaticPages({ config: { prerender: true }, graph });
 const staticRoutes = {};
 
-// TODO handle base path
 ssrPages.forEach((page) => {
   const { route, segment } = page;
 
@@ -88,10 +87,6 @@ staticPages.forEach((page) => {
   }
 });
 
-// CloudFront distribution
-// https://sst.dev/docs/component/aws/router
-const backend = process.env.API_BACKEND_HOSTNAME ?? "";
-
 export const router = new sst.aws.Router("AS-Website-Router", {
   domain:
     $app.stage === "production"
@@ -101,11 +96,7 @@ export const router = new sst.aws.Router("AS-Website-Router", {
         }
       : undefined,
   routes: {
-    // proxy actual API requests to our standalone backend
-    "/api/events": `${backend}/api/events`,
-    "/api/posts": `${backend}/api/posts`,
-    "/api/artists": `${backend}/api/artists`,
-    "/api/albums": `${backend}/api/albums`,
+    "/api/*": gateway.url,
     // favor static routes first
     ...staticRoutes,
     ...ssrRoutes,

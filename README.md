@@ -23,12 +23,11 @@ Then run `npm ci` to install the project's dependencies.
 
 A list of environment variables in a _.env_ file needed to run the project.
 
-| Name                   | Description                             | Notes                                   |
-| ---------------------- | --------------------------------------- | --------------------------------------- |
-| `API_BACKEND_HOSTNAME` | Hostname for the standalone API backend |                                         |
-| `AWS_REGION`           | AWS region for SST                      | Needed for running `npm run deploy:xxx` |
-| `AWS_ROLE_TO_ASSUME`   | IAM Role for running SST                | Needed for running `npm run deploy:xxx` |
-| `CONTACT_EMAIL`        | The "to:" email for the contact form    | Needed for running `npm run deploy:xxx` |
+| Name                 | Description                          | Notes                                   |
+| -------------------- | ------------------------------------ | --------------------------------------- |
+| `AWS_REGION`         | AWS region for SST                   | Needed for running `npm run deploy:xxx` |
+| `AWS_ROLE_TO_ASSUME` | IAM Role for running SST             | Needed for running `npm run deploy:xxx` |
+| `CONTACT_EMAIL`      | The "to:" email for the contact form | Needed for running `npm run deploy:xxx` |
 
 ### Tasks
 

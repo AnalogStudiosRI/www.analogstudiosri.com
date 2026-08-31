@@ -30,8 +30,6 @@ jobs:
       - name: Build
         run: |
           npm run build:ci
-        env:
-          API_BACKEND_HOSTNAME: ${{ secrets.API_BACKEND_HOSTNAME }}
       # TODO: restore storybook
       # - name: Storybook
       #   run: |
