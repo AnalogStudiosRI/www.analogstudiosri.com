@@ -1,3 +1,7 @@
+// match runtime TZ to publish TZ
+// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/41
+process.env.TZ = "America/New_York";
+
 import { slugifyer } from "#services/util.ts";
 import { getEvents } from "#services/events.ts";
 
