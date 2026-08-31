@@ -3,7 +3,7 @@
 process.env.TZ = "America/New_York";
 
 import { slugifyer } from "#services/util.ts";
-import { getEvents } from "#services/events.ts";
+import { getEvents } from "#services/events/server.ts";
 
 interface Props {
   params: {

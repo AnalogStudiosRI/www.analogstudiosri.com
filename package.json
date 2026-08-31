@@ -37,11 +37,12 @@
     "test:frontend": "wtr",
     "test:frontend:tdd": "npm run test --watch",
     "test:backend": "node --experimental-test-module-mocks --test",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "postinstall": "patch-package"
   },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "^3.1110.0",
     "@aws-sdk/client-cloudfront": "^3.1110.0",
+    "@aws-sdk/client-sesv2": "^3.1110.0",
     "@contentful/rich-text-html-renderer": "^17.0.0",
     "@libsql/client": "^0.14.0",
     "@prisma/client": "^6.8.2",
@@ -70,6 +71,7 @@
     "husky": "^9.0.11",
     "jiti": "^2.7.0",
     "lint-staged": "^15.2.2",
+    "patch-package": "^8.0.1",
     "prettier": "^3.8.4",
     "rollup-plugin-analyzer": "^4.0.0",
     "rollup-plugin-visualizer": "^7.0.1",

@@ -1,20 +1,16 @@
-import { createClient } from "@libsql/client/web";
+import { getAlbums, getAlbumById, getAlbumsByArtistId } from "#services/albums.ts";
 
 export async function handler(request: Request) {
   const params = new URLSearchParams(request.url.slice(request.url.indexOf("?")));
-  const id = params.has("id") ? params.get("id") : null;
+  const albumId = params.has("id") ? params.get("id") : null;
   const artistId = params.has("artistId") ? params.get("artistId") : null;
-  const client = createClient({
-    url: process.env.DATABASE_URL ?? "",
-    authToken: process.env.DATABASE_TOKEN,
-  });
-  const { rows } = id
-    ? await client.execute({ sql: "SELECT * FROM albums WHERE id = ?", args: [id] })
+  const albums = albumId
+    ? await getAlbumById(parseInt(albumId, 10))
     : artistId
-      ? await client.execute({ sql: "SELECT * FROM albums WHERE artistId = ?", args: [artistId] })
-      : await client.execute("SELECT * FROM albums");
+      ? await getAlbumsByArtistId(parseInt(artistId, 10))
+      : await getAlbums();
 
-  return new Response(JSON.stringify(rows), {
+  return new Response(JSON.stringify(albums), {
     headers: new Headers({
       "Cache-Control": "max-age=604800",
       "Content-Type": "application/json",
