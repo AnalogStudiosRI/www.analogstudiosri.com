@@ -104,7 +104,8 @@ export const router = new sst.aws.Router("AS-Website-Router", {
     // proxy actual API requests to our standalone backend
     "/api/events": `${backend}/api/events`,
     "/api/posts": `${backend}/api/posts`,
-    "/api/*": gateway.url,
+    "/api/artists": `${backend}/api/artists`,
+    "/api/albums": `${backend}/api/albums`,
     // favor static routes first
     ...staticRoutes,
     ...ssrRoutes,
