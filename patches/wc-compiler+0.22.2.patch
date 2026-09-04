@@ -1,0 +1,87 @@
+diff --git a/node_modules/wc-compiler/src/wcc.js b/node_modules/wc-compiler/src/wcc.js
+index 3aed9a2..5502533 100644
+--- a/node_modules/wc-compiler/src/wcc.js
++++ b/node_modules/wc-compiler/src/wcc.js
+@@ -9,6 +9,38 @@ import { serialize } from 'parse5';
+ import { transform } from 'sucrase';
+ import fs from 'fs';
+ 
++/**
++ * Transform source files that can contain TypeScript or JSX syntax before Acorn parses them.
++ *
++ * Plain JavaScript dependencies have already been compiled and should be parsed as-is. Passing
++ * those bundles through Sucrase can corrupt otherwise valid JavaScript; for example, inserting a
++ * class-field initializer between a `super()` call and the rest of a comma expression produces an
++ * invalid `;,` token sequence.
++ * 
++ * Current example in this repo:
++ * 
++ * The event details page statically imports `events/server.ts`, so `wc-compiler` recursively parses the bundled Contentful SDK. It fails on generated Contentful code shaped like:
++ *
++ * ```js
++ * super(...), this.linkType = linkType;
++ * ```
++ * 
++ */
++function transformModule(moduleURL, moduleContents) {
++  const extension = moduleURL.pathname.split('.').pop();
++
++  // `.js`, `.mjs`, and `.cjs` modules do not need either of the configured transformations.
++  if (!['jsx', 'ts', 'tsx'].includes(extension)) {
++    return moduleContents;
++  }
++
++  return transform(moduleContents, {
++    transforms: ['typescript', 'jsx'],
++    jsxRuntime: 'automatic',
++    production: true,
++  }).code;
++}
++
+ function isCustomElementDefinitionNode(node) {
+   const { expression } = node;
+ 
+@@ -79,11 +111,7 @@ async function renderComponentRoots(tree, definitions) {
+ 
+ function registerDependencies(moduleURL, definitions, depth = 0) {
+   const moduleContents = fs.readFileSync(moduleURL, 'utf-8');
+-  const result = transform(moduleContents, {
+-    transforms: ['typescript', 'jsx'],
+-    jsxRuntime: 'automatic',
+-    production: true,
+-  });
++  const moduleCode = transformModule(moduleURL, moduleContents);
+   const nextDepth = (depth += 1);
+   const customParser = getParser(moduleURL);
+   const parser = customParser ? customParser.parser : acorn.Parser;
+@@ -94,7 +122,7 @@ function registerDependencies(moduleURL, definitions, depth = 0) {
+       };
+ 
+   walk.simple(
+-    parser.parse(result.code, {
++    parser.parse(moduleCode, {
+       ecmaVersion: 'latest',
+       sourceType: 'module',
+     }),
+@@ -142,11 +170,7 @@ function registerDependencies(moduleURL, definitions, depth = 0) {
+ 
+ async function getTagName(moduleURL) {
+   const moduleContents = await fs.promises.readFile(moduleURL, 'utf-8');
+-  const result = transform(moduleContents, {
+-    transforms: ['typescript', 'jsx'],
+-    jsxRuntime: 'automatic',
+-    production: true,
+-  });
++  const moduleCode = transformModule(moduleURL, moduleContents);
+   const customParser = getParser(moduleURL);
+   const parser = customParser ? customParser.parser : acorn.Parser;
+   const config = customParser
+@@ -157,7 +181,7 @@ async function getTagName(moduleURL) {
+   let tagName;
+ 
+   walk.simple(
+-    parser.parse(result.code, {
++    parser.parse(moduleCode, {
+       ecmaVersion: 'latest',
+       sourceType: 'module',
+     }),

@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Admin Dashboard</title>
+
+    <script>
+      function fetchResource(resourceType) {
+        fetch(`/api/${resourceType}`).then(async (response) => {
+          const data = await response.json();
+          console.log(`RESPONSE for type => ${resourceType}`, { data });
+          document.getElementById("results").textContent = data.length;
+          document.getElementsByTagName("pre")[0].textContent = JSON.stringify(data);
+        });
+      }
+
+      function triggerWebhook(type) {
+        fetch(`/api/webhook/${type}`, {
+          method: "POST",
+          body: JSON.stringify({
+            sys: {
+              contentType: {
+                sys: {
+                  id: "events",
+                },
+              },
+            },
+          }),
+          headers: new Headers({
+            "Content-Type": "application/json",
+          }),
+        }).then(async (response) => {
+          const data = await response.json();
+          console.log(`RESPONSE for webhook => ${type}`, { data });
+          document.getElementById("results").textContent = "1";
+          document.getElementsByTagName("pre")[0].textContent = JSON.stringify(data);
+        });
+      }
+
+      window.addEventListener("DOMContentLoaded", function () {
+        // resources
+        const resources = ["posts", "artists", "albums", "events"];
+
+        resources.forEach((resource) => {
+          document
+            .getElementById(resource)
+            .addEventListener("click", () => fetchResource(resource));
+        });
+
+        // webhooks
+        document
+          .getElementById("contentful")
+          .addEventListener("click", () => triggerWebhook("contentful"));
+      });
+    </script>
+
+    <style>
+      body {
+        text-align: center;
+      }
+      button {
+        width: 10%;
+        height: 50px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      details {
+        margin: 20px auto;
+      }
+      pre {
+        margin: 0 auto;
+        display: block;
+        width: 80%;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Endpoint Debugger</h1>
+    <h2>Number of results: <span id="results"></span></h2>
+    <button id="albums">Albums</button>
+    <button id="artists">Artists</button>
+    <button id="events">Events</button>
+    <button id="posts">Posts</button>
+    <details>
+      <pre></pre>
+    </details>
+    <hr />
+    <button id="contentful">Contentful</button>
+  </body>
+</html>

@@ -28,10 +28,12 @@ jobs:
         run: |
           npm run build:ci
         env:
-          API_BACKEND_HOSTNAME: ${{ secrets.API_BACKEND_HOSTNAME }}
+          CONTENTFUL_SPACE: ${{ secrets.CONTENTFUL_SPACE }}
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_TOKEN: ${{ secrets.DATABASE_TOKEN }}
       - name: Deploy to Production Environment
         env:
-          API_BACKEND_HOSTNAME: ${{ secrets.API_BACKEND_HOSTNAME }}
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
         run: |
           npm run deploy:prod

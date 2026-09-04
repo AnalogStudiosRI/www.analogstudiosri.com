@@ -31,7 +31,10 @@ jobs:
         run: |
           npm run build:ci
         env:
-          API_BACKEND_HOSTNAME: ${{ secrets.API_BACKEND_HOSTNAME }}
+          CONTENTFUL_SPACE: ${{ secrets.CONTENTFUL_SPACE }}
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_TOKEN: ${{ secrets.DATABASE_TOKEN }}
       # TODO: restore storybook
       # - name: Storybook
       #   run: |
