@@ -18,7 +18,7 @@ const client = createClient({
   authToken: process.env.DATABASE_TOKEN,
 });
 
-function toArtist(row: Record<string, unknown>): Artist {
+function mapRowToArtist(row: Record<string, unknown>): Artist {
   return {
     id: Number(row.id),
     name: String(row.name),
@@ -40,7 +40,7 @@ function isActive(artist: Artist): boolean {
 
 async function getArtists(): Promise<Artist[]> {
   const { rows } = await client.execute("SELECT * FROM artists");
-  return rows.map(toArtist).filter(isActive);
+  return rows.map(mapRowToArtist).filter(isActive);
 }
 
 async function getArtistById(id: number): Promise<Artist> {
@@ -49,7 +49,7 @@ async function getArtistById(id: number): Promise<Artist> {
     args: [id],
   });
 
-  return toArtist(rows[0]);
+  return mapRowToArtist(rows[0]);
 }
 
 export { getArtists, getArtistById };

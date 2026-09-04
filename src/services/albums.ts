@@ -14,7 +14,7 @@ const client = createClient({
   authToken: process.env.DATABASE_TOKEN,
 });
 
-function toAlbum(row: Record<string, unknown>): Album {
+function mapRowToAlbum(row: Record<string, unknown>): Album {
   return {
     id: Number(row.id),
     title: String(row.title),
@@ -28,7 +28,7 @@ function toAlbum(row: Record<string, unknown>): Album {
 
 async function getAlbums(): Promise<Album[]> {
   const { rows } = await client.execute("SELECT * FROM albums");
-  return rows.map(toAlbum);
+  return rows.map(mapRowToAlbum);
 }
 
 async function getAlbumById(id: number): Promise<Album> {
@@ -37,7 +37,7 @@ async function getAlbumById(id: number): Promise<Album> {
     args: [id],
   });
 
-  return toAlbum(rows[0]);
+  return mapRowToAlbum(rows[0]);
 }
 
 async function getAlbumsByArtistId(id: number): Promise<Album[]> {
@@ -46,7 +46,7 @@ async function getAlbumsByArtistId(id: number): Promise<Album[]> {
     args: [id],
   });
 
-  return rows.map(toAlbum);
+  return rows.map(mapRowToAlbum);
 }
 
 export { getAlbums, getAlbumById, getAlbumsByArtistId };
