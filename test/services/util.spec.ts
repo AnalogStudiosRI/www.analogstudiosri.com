@@ -5,19 +5,23 @@ import { escapeHtmlAttribute, slugifyer } from "#services/util.ts";
 
 describe("Util service", () => {
   describe("slugifyer", () => {
-    it("should slugify a basic string", () => {
-      assert.strictEqual(slugifyer("Lost Time"), "lost-time");
+    it("should slugify an artist name", () => {
+      assert.strictEqual(slugifyer("Metal Wings"), "metal-wings");
     });
 
-    it("should slugify with colons", () => {
+    it("should slugify an album name with colons", () => {
       assert.strictEqual(slugifyer("BI Music Fest : Porch Gigs"), "bi-music-fest--porch-gigs");
     });
 
-    it("should slugify with parenthesis and hyphens", () => {
+    it("should slugify an album name with parenthesis and hyphens", () => {
       assert.strictEqual(
         slugifyer("Live - From The Basement (Set 1)"),
         "live---from-the-basement-set-1",
       );
+    });
+
+    it("should slugify an event title", () => {
+      assert.strictEqual(slugifyer("BLISS RI 2026 (DAY 1)"), "bliss-ri-2026-day-1");
     });
   });
 
