@@ -95,29 +95,6 @@ export const router = new sst.aws.Router("AS-Website-Router", {
           redirects: ["analogstudios.net", "*.analogstudios.net"],
         }
       : undefined,
-  edge: {
-    viewerRequest: {
-      injection: `
-        const path = event.request.uri;
-
-        if (path === "/admin" || path.startsWith("/admin/")) {
-          return {
-            statusCode: 404,
-            statusDescription: "Not Found",
-            headers: {
-              "content-type": {
-                value: "text/plain; charset=utf-8"
-              },
-              "cache-control": {
-                value: "no-store"
-              }
-            },
-            body: "Not Found"
-          };
-        }
-      `,
-    },
-  },
   routes: {
     "/api/*": gateway.url,
     // favor static routes first
