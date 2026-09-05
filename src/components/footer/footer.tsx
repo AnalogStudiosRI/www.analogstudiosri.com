@@ -1,8 +1,9 @@
+import { Temporal } from "temporal-polyfill";
 import styles from "./footer.module.css";
 
 export default class Footer extends HTMLElement {
   STARTING_YEAR = 2007;
-  currentYear = new Date().getFullYear();
+  currentYear = Temporal.Now.plainDateTimeISO("America/New_York").year;
 
   connectedCallback() {
     this.render();

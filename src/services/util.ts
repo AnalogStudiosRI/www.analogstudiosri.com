@@ -1,3 +1,7 @@
+import { Temporal } from "temporal-polyfill";
+
+const TIME_ZONE = "America/New_York";
+
 function slugifyer(str: string): string {
   return str
     .toLowerCase()
@@ -16,4 +20,27 @@ function escapeHtmlAttribute(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
-export { slugifyer, escapeHtmlAttribute };
+function formatDateTime(timestampInSeconds: number | undefined): string {
+  if (timestampInSeconds === undefined) {
+    return "";
+  }
+
+  const dateTime = Temporal.Instant.fromEpochMilliseconds(
+    timestampInSeconds * 1000,
+  ).toZonedDateTimeISO(TIME_ZONE);
+  const date = dateTime.toPlainDate().toLocaleString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const time = dateTime.toPlainTime().toLocaleString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  return `${date}, ${time}`.toUpperCase();
+}
+
+export { slugifyer, escapeHtmlAttribute, formatDateTime };
