@@ -1,11 +1,15 @@
 // TODO: page load hangs if we use import aliases (e.g. #)
 // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/25
+import { Temporal } from "temporal-polyfill";
 import { getEvents } from "../../services/events.ts";
 import eventsCalendarSheet from "./events-calendar.css" with { type: "css" };
 import eventsSheet from "../../styles/events.css" with { type: "css" };
 import themeSheet from "../../styles/theme.css" with { type: "css" };
 import { slugifyer } from "../../services/util.ts";
 import type { Event } from "#services/events.ts";
+
+const TIME_ZONE = "America/New_York";
+
 interface Day {
   date: number | null;
   hasEvents: boolean;
@@ -16,31 +20,13 @@ type Week = Day[];
 export class EventsCalendarComponent extends HTMLElement {
   #DAYS_IN_WEEK = 7;
   #MAX_CALENDAR_SPACES = 42;
-  #CALENDAR = [
-    { NAME: "January", DAYS: 31 },
-    { NAME: "February", DAYS: 28 },
-    { NAME: "March", DAYS: 31 },
-    { NAME: "April", DAYS: 30 },
-    { NAME: "May", DAYS: 31 },
-    { NAME: "June", DAYS: 30 },
-    { NAME: "July", DAYS: 31 },
-    { NAME: "August", DAYS: 31 },
-    { NAME: "September", DAYS: 30 },
-    { NAME: "October", DAYS: 31 },
-    { NAME: "November", DAYS: 30 },
-    { NAME: "December", DAYS: 31 },
-  ];
   #events: Event[] = [];
-  #currentMonthIndex: number;
+  #currentMonth: Temporal.PlainYearMonth;
   #currentMonthData: Week[] = [];
-  #currentYear: number;
 
   constructor() {
     super();
-    const now = new Date();
-
-    this.#currentMonthIndex = now.getMonth();
-    this.#currentYear = now.getFullYear();
+    this.#currentMonth = Temporal.Now.plainDateISO(TIME_ZONE).toPlainYearMonth();
   }
 
   async connectedCallback() {
@@ -59,8 +45,27 @@ export class EventsCalendarComponent extends HTMLElement {
     this.#currentMonthData = [];
     let week: Week = [];
     let monthDateCounter = 1;
-    const startingDayOfMonth = new Date(this.#currentYear, this.#currentMonthIndex).getDay();
-    const daysInMonth = this.#CALENDAR[this.#currentMonthIndex].DAYS;
+    const firstDayOfMonth = this.#currentMonth.toPlainDate({ day: 1 });
+    // Temporal uses Monday = 1 through Sunday = 7. The calendar starts on Sunday.
+    const startingDayOfMonth = firstDayOfMonth.dayOfWeek % this.#DAYS_IN_WEEK;
+    const eventsByDate = new Map<string, Event[]>();
+
+    for (const event of this.#events) {
+      const eventDate = Temporal.Instant.fromEpochMilliseconds(event.startTime * 1000)
+        .toZonedDateTimeISO(TIME_ZONE)
+        .toPlainDate();
+
+      if (
+        eventDate.year === this.#currentMonth.year &&
+        eventDate.month === this.#currentMonth.month
+      ) {
+        const dateKey = eventDate.toString();
+        const events = eventsByDate.get(dateKey) ?? [];
+
+        events.push(event);
+        eventsByDate.set(dateKey, events);
+      }
+    }
 
     for (let i = 0, j = this.#MAX_CALENDAR_SPACES; i < j; i += 1) {
       // use null as date default to block out tiles in our calender that aren't in the month
@@ -71,42 +76,12 @@ export class EventsCalendarComponent extends HTMLElement {
         events: [],
       };
 
-      if (i >= startingDayOfMonth && monthDateCounter <= daysInMonth) {
-        day.date = monthDateCounter;
+      if (i >= startingDayOfMonth && monthDateCounter <= this.#currentMonth.daysInMonth) {
+        const date = firstDayOfMonth.add({ days: monthDateCounter - 1 });
 
-        // check if day has an event
-        for (let k = 0, m = this.#events.length; k < m; k += 1) {
-          const event = this.#events[k];
-          const eventStartTimeTimestamp = event.startTime;
-          const currentDayStartTimestamp =
-            new Date(
-              this.#currentYear,
-              this.#currentMonthIndex,
-              monthDateCounter,
-              0,
-              0,
-              0,
-            ).getTime() / 1000;
-          const currentDayEndTimestamp =
-            new Date(
-              this.#currentYear,
-              this.#currentMonthIndex,
-              monthDateCounter,
-              23,
-              0,
-              0,
-            ).getTime() / 1000;
-
-          if (
-            eventStartTimeTimestamp >= currentDayStartTimestamp &&
-            eventStartTimeTimestamp <= currentDayEndTimestamp
-          ) {
-            if (!day.hasEvents) {
-              day.events.push(event);
-              day.hasEvents = true;
-            }
-          }
-        }
+        day.date = date.day;
+        day.events = eventsByDate.get(date.toString()) ?? [];
+        day.hasEvents = day.events.length > 0;
 
         monthDateCounter += 1;
       }
@@ -121,29 +96,20 @@ export class EventsCalendarComponent extends HTMLElement {
   }
 
   #calculatePreviousMonth(): void {
-    if (this.#currentMonthIndex === 0) {
-      this.#currentMonthIndex = 11;
-      this.#currentYear -= 1;
-    } else {
-      this.#currentMonthIndex -= 1;
-    }
-
+    this.#currentMonth = this.#currentMonth.subtract({ months: 1 });
     this.#calculateCurrentMonthData();
   }
 
   #calculateNextMonth(): void {
-    if (this.#currentMonthIndex === 11) {
-      this.#currentMonthIndex = 0;
-      this.#currentYear += 1;
-    } else {
-      this.#currentMonthIndex += 1;
-    }
-
+    this.#currentMonth = this.#currentMonth.add({ months: 1 });
     this.#calculateCurrentMonthData();
   }
 
   #getHeaderText(): string {
-    return this.#CALENDAR[this.#currentMonthIndex].NAME + " " + this.#currentYear;
+    return this.#currentMonth.toPlainDate({ day: 1 }).toLocaleString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
   }
 
   // TODO: private methods are not supported by WCC <> JSX event handlers

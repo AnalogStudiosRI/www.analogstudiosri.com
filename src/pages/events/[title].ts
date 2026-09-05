@@ -1,8 +1,4 @@
-// match runtime TZ to publish TZ
-// https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/41
-process.env.TZ = "America/New_York";
-
-import { slugifyer } from "#services/util.ts";
+import { formatDateTime, slugifyer } from "#services/util.ts";
 import { getEvents } from "#services/events.ts";
 
 interface Props {
@@ -12,45 +8,11 @@ interface Props {
 }
 
 export default class EventDetailsPage extends HTMLElement {
-  #MONTHS = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  #DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   #title: string;
 
   constructor({ params }: Props) {
     super();
     this.#title = params?.title ?? "No Title";
-  }
-
-  // EEEE, MMMM d, yyyy, h:mm a
-  // SATURDAY, FEBRUARY 6, 2016, 9:00 PM
-  formatEventTime(timestamp: number | undefined): string {
-    if (!timestamp) return "";
-
-    const dateObj = new Date(timestamp * 1000);
-    const day = this.#DAYS[dateObj.getDay()].toUpperCase();
-    const month = this.#MONTHS[dateObj.getMonth()].toUpperCase();
-    const date = dateObj.getDate();
-    const year = dateObj.getFullYear();
-    const hours = dateObj.getHours();
-    const hour = hours <= 12 ? hours : hours - 12;
-    const minutes = dateObj.getMinutes();
-    const minute = minutes <= 9 ? `0${minutes}` : minutes;
-    const ampm = hours <= 11 ? "AM" : "PM";
-
-    return `${day}, ${month} ${date}, ${year}, ${hour}:${minute} ${ampm}`;
   }
 
   async connectedCallback() {
@@ -68,7 +30,7 @@ export default class EventDetailsPage extends HTMLElement {
             <as-social-share></as-social-share>
             <div id="as-event-info">
               <p>Event Title: ${event?.title}</p>
-              <p>Event Date: ${this.formatEventTime(event?.startTime)}</p>
+              <p>Event Date: ${formatDateTime(event?.startTime)}</p>
               <p>Event Info:</p>
               <p style="color: var(--color-primary)">${event?.description}</p>
             </div>

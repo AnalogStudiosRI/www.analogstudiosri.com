@@ -2,6 +2,7 @@
 // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/25
 import { getPosts } from "../../services/posts.ts";
 import type { Post } from "../../services/posts.ts";
+import { formatDateTime } from "../../services/util.ts";
 import postsListSheet from "./posts-list.css" with { type: "css" };
 import themeSheet from "../../styles/theme.css" with { type: "css" };
 export default class PostsListComponent extends HTMLElement {
@@ -24,37 +25,12 @@ export default class PostsListComponent extends HTMLElement {
     this.render();
   }
 
-  #getFormateDate(timestamp: number): string {
-    // SUNDAY, FEBRUARY 12, 2017, 8:47 AM
-    const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-    const months = [
-      "JANUARY",
-      "FEBRUARY",
-      "MARCH",
-      "APRIL",
-      "MAY",
-      "JUNE",
-      "JULY",
-      "AUGUST",
-      "SEPTEMBER",
-      "OCTOBER",
-      "NOVEMBER",
-      "DECEMBER",
-    ];
-
-    const dateObj = new Date(timestamp);
-    const amPm = dateObj.getHours() < 12 ? "AM" : "PM";
-    const hours = dateObj.getHours() < 12 ? dateObj.getHours() : dateObj.getHours() - 12;
-
-    return `${days[dateObj.getDay()]}, ${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}, ${hours}:${dateObj.getMinutes()} ${amPm}`;
-  }
-
   render() {
     const maxDisplay = !this.#max ? this.#posts.length : this.#max;
     const maxPosts = this.#posts.slice(0, maxDisplay);
     const html = maxPosts
       .map((post) => {
-        const formattedDate = this.#getFormateDate(post.createdTime * 1000);
+        const formattedDate = formatDateTime(post.createdTime);
 
         return `
         <div class="post">
