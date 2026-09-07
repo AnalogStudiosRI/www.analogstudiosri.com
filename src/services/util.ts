@@ -1,3 +1,7 @@
+import { Temporal } from "temporal-polyfill";
+
+export const TIME_ZONE = "America/New_York" as const;
+
 function slugifyer(str: string): string {
   return str
     .toLowerCase()
@@ -16,4 +20,40 @@ function escapeHtmlAttribute(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
-export { slugifyer, escapeHtmlAttribute };
+function toTimestampInSeconds(dateTime: string): number {
+  let instant: Temporal.Instant;
+
+  try {
+    instant = Temporal.Instant.from(dateTime);
+  } catch {
+    // Contentful can return event times without an offset; those are local New York times.
+    instant = Temporal.PlainDateTime.from(dateTime).toZonedDateTime(TIME_ZONE).toInstant();
+  }
+
+  return instant.epochMilliseconds / 1000;
+}
+
+function formatDateTime(timestampInSeconds: number | undefined): string {
+  if (timestampInSeconds === undefined) {
+    return "";
+  }
+
+  const dateTime = Temporal.Instant.fromEpochMilliseconds(
+    timestampInSeconds * 1000,
+  ).toZonedDateTimeISO(TIME_ZONE);
+  const date = dateTime.toPlainDate().toLocaleString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const time = dateTime.toPlainTime().toLocaleString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  return `${date}, ${time}`.toUpperCase();
+}
+
+export { slugifyer, escapeHtmlAttribute, toTimestampInSeconds, formatDateTime };

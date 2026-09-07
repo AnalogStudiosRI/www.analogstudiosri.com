@@ -1,4 +1,5 @@
 import * as AWS from "@aws-sdk/client-cloudfront";
+import { Temporal } from "temporal-polyfill";
 
 interface CloudfrontInvalidationParams {
   DistributionId: string;
@@ -31,7 +32,7 @@ export async function handler(request: Request) {
   const params: CloudfrontInvalidationParams = {
     DistributionId: CONFIG.distributionId ?? "",
     InvalidationBatch: {
-      CallerReference: new Date().getTime().toString(),
+      CallerReference: Temporal.Now.instant().epochMilliseconds.toString(),
       Paths: {
         Quantity: 1,
         Items: [`/api/${entity}s*`],

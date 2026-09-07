@@ -1,7 +1,15 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
+import { Temporal } from "temporal-polyfill";
+import {
+  escapeHtmlAttribute,
+  formatDateTime,
+  slugifyer,
+  toTimestampInSeconds,
+} from "#services/util.ts";
 
-import { escapeHtmlAttribute, slugifyer } from "#services/util.ts";
+const epochSeconds = (instant: string): number =>
+  Temporal.Instant.from(instant).epochMilliseconds / 1000;
 
 describe("Util service", () => {
   describe("slugifyer", () => {
@@ -31,6 +39,54 @@ describe("Util service", () => {
         escapeHtmlAttribute(`Analog & "Studios" <'Rhode Island'>`),
         "Analog &amp; &quot;Studios&quot; &lt;&#39;Rhode Island&#39;&gt;",
       );
+    });
+  });
+
+  describe("toTimestampInSeconds", () => {
+    it("should parse a date-time with an explicit offset", () => {
+      assert.strictEqual(toTimestampInSeconds("2026-07-25T18:00:00-04:00"), 1_785_016_800);
+    });
+
+    it("should parse a local date-time in the New York time zone", () => {
+      assert.strictEqual(toTimestampInSeconds("2026-07-25T18:00"), 1_785_016_800);
+    });
+
+    it("should reject an invalid date-time", () => {
+      assert.throws(() => toTimestampInSeconds("not-a-date"), RangeError);
+    });
+  });
+
+  describe("formatDateTime", () => {
+    it("should return an empty string when the timestamp is undefined", () => {
+      assert.strictEqual(formatDateTime(undefined), "");
+    });
+
+    it("should format a timestamp in seconds using the New York time zone", () => {
+      const timestamp = epochSeconds("2026-09-07T13:05:00Z");
+
+      assert.strictEqual(formatDateTime(timestamp), "MONDAY, SEPTEMBER 7, 2026, 9:05 AM");
+    });
+
+    it("should use the New York date when UTC has crossed into the next day", () => {
+      const timestamp = epochSeconds("2026-01-01T02:30:00Z");
+
+      assert.strictEqual(formatDateTime(timestamp), "WEDNESDAY, DECEMBER 31, 2025, 9:30 PM");
+    });
+
+    it("should account for the start of daylight saving time", () => {
+      const beforeTransition = epochSeconds("2026-03-08T06:59:00Z");
+      const afterTransition = epochSeconds("2026-03-08T07:00:00Z");
+
+      assert.strictEqual(formatDateTime(beforeTransition), "SUNDAY, MARCH 8, 2026, 1:59 AM");
+      assert.strictEqual(formatDateTime(afterTransition), "SUNDAY, MARCH 8, 2026, 3:00 AM");
+    });
+
+    it("should account for the end of daylight saving time", () => {
+      const beforeTransition = epochSeconds("2026-11-01T05:59:00Z");
+      const afterTransition = epochSeconds("2026-11-01T06:00:00Z");
+
+      assert.strictEqual(formatDateTime(beforeTransition), "SUNDAY, NOVEMBER 1, 2026, 1:59 AM");
+      assert.strictEqual(formatDateTime(afterTransition), "SUNDAY, NOVEMBER 1, 2026, 1:00 AM");
     });
   });
 });
