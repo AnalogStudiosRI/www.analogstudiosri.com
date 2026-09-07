@@ -5,10 +5,8 @@ import { getEvents } from "../../services/events/client.ts";
 import eventsCalendarSheet from "./events-calendar.css" with { type: "css" };
 import eventsSheet from "../../styles/events.css" with { type: "css" };
 import themeSheet from "../../styles/theme.css" with { type: "css" };
-import { slugifyer } from "../../services/util.ts";
+import { slugifyer, TIME_ZONE } from "../../services/util.ts";
 import type { Event } from "#services/events/types.ts";
-
-const TIME_ZONE = "America/New_York";
 interface Day {
   date: number | null;
   hasEvents: boolean;

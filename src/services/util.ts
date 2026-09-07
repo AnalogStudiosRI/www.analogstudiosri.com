@@ -1,6 +1,6 @@
 import { Temporal } from "temporal-polyfill";
 
-const TIME_ZONE = "America/New_York";
+export const TIME_ZONE = "America/New_York" as const;
 
 function slugifyer(str: string): string {
   return str
