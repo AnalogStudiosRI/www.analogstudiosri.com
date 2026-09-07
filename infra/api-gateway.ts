@@ -57,7 +57,21 @@ ssrPages.forEach((page) => {
   });
 });
 
-export function addApiRoutes(contentfulCache) {
+// API routes are added after the router is created so the Contentful webhook can link to
+// that stage's CloudFront distribution without creating a circular module dependency.
+export function addApiRoutes(router) {
+  const contentfulCache = new sst.Linkable("ContentfulCache", {
+    properties: {
+      distributionId: router.distributionID,
+    },
+    include: [
+      sst.aws.permission({
+        actions: ["cloudfront:CreateInvalidation"],
+        resources: [router.nodes.cdn.apply((cdn) => cdn.nodes.distribution.arn)],
+      }),
+    ],
+  });
+
   apiRoutes.forEach((apiRoute) => {
     const [route, { id }] = apiRoute;
 

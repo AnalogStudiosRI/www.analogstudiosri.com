@@ -105,16 +105,4 @@ export const router = new sst.aws.Router("AS-Website-Router", {
   invalidation: true,
 });
 
-const contentfulCache = new sst.Linkable("ContentfulCache", {
-  properties: {
-    distributionId: router.distributionID,
-  },
-  include: [
-    sst.aws.permission({
-      actions: ["cloudfront:CreateInvalidation"],
-      resources: [router.nodes.cdn.apply((cdn) => cdn.nodes.distribution.arn)],
-    }),
-  ],
-});
-
-addApiRoutes(contentfulCache);
+addApiRoutes(router);
