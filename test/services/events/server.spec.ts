@@ -7,8 +7,8 @@ const entries = [
     fields: {
       id: 1,
       description: { value: "First description" },
-      startTime: "2026-09-01T19:00:00-04:00",
-      endTime: "2026-09-01T22:00:00-04:00",
+      startTime: "2026-09-01T19:00",
+      endTime: "2026-09-01T22:00",
       title: "First Event",
       link: "https://example.com/first",
     },

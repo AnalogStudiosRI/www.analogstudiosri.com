@@ -1,7 +1,7 @@
 import * as contentful from "contentful";
 import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
-import { Temporal } from "temporal-polyfill";
 import type { Event, EventsService } from "#services/events/types.ts";
+import { toTimestampInSeconds } from "#services/util.ts";
 
 interface EventEntry {
   id: contentful.EntryFieldTypes.Number;
@@ -41,8 +41,8 @@ const getEvents: EventsService["getEvents"] = async () => {
               `<img src="${node.data.target.fields.file.url}" loading="lazy"/>`,
           },
         }),
-        startTime: Temporal.Instant.from(startTime).epochMilliseconds / 1000,
-        endTime: Temporal.Instant.from(endTime).epochMilliseconds / 1000,
+        startTime: toTimestampInSeconds(startTime),
+        endTime: toTimestampInSeconds(endTime),
         createdTime: event.sys.createdAt,
         link,
         tags: tags.map((tag) => tag.sys.id),

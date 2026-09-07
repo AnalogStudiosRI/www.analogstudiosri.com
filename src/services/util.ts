@@ -20,6 +20,19 @@ function escapeHtmlAttribute(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
+function toTimestampInSeconds(dateTime: string): number {
+  let instant: Temporal.Instant;
+
+  try {
+    instant = Temporal.Instant.from(dateTime);
+  } catch {
+    // Contentful can return event times without an offset; those are local New York times.
+    instant = Temporal.PlainDateTime.from(dateTime).toZonedDateTime(TIME_ZONE).toInstant();
+  }
+
+  return instant.epochMilliseconds / 1000;
+}
+
 function formatDateTime(timestampInSeconds: number | undefined): string {
   if (timestampInSeconds === undefined) {
     return "";
@@ -43,4 +56,4 @@ function formatDateTime(timestampInSeconds: number | undefined): string {
   return `${date}, ${time}`.toUpperCase();
 }
 
-export { slugifyer, escapeHtmlAttribute, formatDateTime };
+export { slugifyer, escapeHtmlAttribute, toTimestampInSeconds, formatDateTime };

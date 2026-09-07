@@ -1,7 +1,12 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { Temporal } from "temporal-polyfill";
-import { escapeHtmlAttribute, formatDateTime, slugifyer } from "#services/util.ts";
+import {
+  escapeHtmlAttribute,
+  formatDateTime,
+  slugifyer,
+  toTimestampInSeconds,
+} from "#services/util.ts";
 
 const epochSeconds = (instant: string): number =>
   Temporal.Instant.from(instant).epochMilliseconds / 1000;
@@ -34,6 +39,20 @@ describe("Util service", () => {
         escapeHtmlAttribute(`Analog & "Studios" <'Rhode Island'>`),
         "Analog &amp; &quot;Studios&quot; &lt;&#39;Rhode Island&#39;&gt;",
       );
+    });
+  });
+
+  describe("toTimestampInSeconds", () => {
+    it("should parse a date-time with an explicit offset", () => {
+      assert.strictEqual(toTimestampInSeconds("2026-07-25T18:00:00-04:00"), 1_785_016_800);
+    });
+
+    it("should parse a local date-time in the New York time zone", () => {
+      assert.strictEqual(toTimestampInSeconds("2026-07-25T18:00"), 1_785_016_800);
+    });
+
+    it("should reject an invalid date-time", () => {
+      assert.throws(() => toTimestampInSeconds("not-a-date"), RangeError);
     });
   });
 
