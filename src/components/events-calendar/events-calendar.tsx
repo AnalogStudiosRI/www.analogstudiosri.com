@@ -1,11 +1,11 @@
 // TODO: page load hangs if we use import aliases (e.g. #)
 // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/25
-import { getEvents } from "../../services/events.ts";
+import { getEvents } from "../../services/events/client.ts";
 import eventsCalendarSheet from "./events-calendar.css" with { type: "css" };
 import eventsSheet from "../../styles/events.css" with { type: "css" };
 import themeSheet from "../../styles/theme.css" with { type: "css" };
 import { slugifyer } from "../../services/util.ts";
-import type { Event } from "#services/events.ts";
+import type { Event } from "#services/events/types.ts";
 interface Day {
   date: number | null;
   hasEvents: boolean;

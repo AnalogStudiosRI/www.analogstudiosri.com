@@ -1,0 +1,41 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model albums {
+  id          Int                      @id @unique(map: "sqlite_autoindex_albums_1") @default(autoincrement())
+  title       String
+  description Unsupported("longtext")
+  year        Int?
+  imageUrl    Unsupported("longtext")?
+  downloadUrl Unsupported("longtext")?
+  artistId    Int
+
+  @@index([artistId], map: "idx_albums_id_idx")
+}
+
+model artists {
+  id           Int                      @id @default(autoincrement())
+  name         String                   @unique(map: "sqlite_autoindex_artists_1")
+  imageUrl     Unsupported("longtext")?
+  genre        String?
+  location     String?
+  label        String?
+  contactPhone Int?
+  contactEmail String?
+  bio          Unsupported("longtext")
+  isActive     Int?                     @default(1)
+}
+
+model posts {
+  id          Int                     @id @unique(map: "sqlite_autoindex_posts_1") @default(autoincrement())
+  title       String
+  summary     Unsupported("longtext")
+  createdTime Int
+}

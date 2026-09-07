@@ -4,35 +4,27 @@
 
 Frontend website for [www.analogstudiosri.com](www.analogstudiosri.com) built with [Greenwood](https://www.greenwoodjs.io). It is deployed using Github Actions to AWS (S3 / Cloudfront / Lambda) using SST. The [backend](https://github.com/AnalogStudiosRI/api) uses and AWS (API Gateway / Lambda) with [Architect](https://arc.codes/).
 
-## Contributing
+## Setup
 
-### Setup
+1. Clone the repo
+1. Have the latest [NodeJS LTS](https://nodejs.org/) version installed or run `nvm use` if using [nvm](https://github.com/nvm-sh/nvm)
+1. Run `npm ci`
 
-You'll need the latest [NodeJS LTS](https://nodejs.org/) version installed to run and contribute to this project. Or run `nvm use` if using [nvm](https://github.com/nvm-sh/nvm).
-
-You can confirm by running the following:
-
-```sh
-$ node -v
-24.4.0
-```
-
-Then run `npm ci` to install the project's dependencies.
-
-### Environment Variables
+## Environment Variables
 
 A list of environment variables in a _.env_ file needed to run the project.
 
-| Name                   | Description                             | Notes                                   |
-| ---------------------- | --------------------------------------- | --------------------------------------- |
-| `API_BACKEND_HOSTNAME` | Hostname for the standalone API backend |                                         |
-| `AWS_REGION`           | AWS region for SST                      | Needed for running `npm run deploy:xxx` |
-| `AWS_ROLE_TO_ASSUME`   | IAM Role for running SST                | Needed for running `npm run deploy:xxx` |
-| `CONTACT_EMAIL`        | The "to:" email for the contact form    | Needed for running `npm run deploy:xxx` |
+| Name                 | Description                          | Notes                                   |
+| -------------------- | ------------------------------------ | --------------------------------------- |
+| `AWS_REGION`         | AWS region for SST                   | Needed for running `npm run deploy:xxx` |
+| `AWS_ROLE_TO_ASSUME` | IAM Role for running SST             | Needed for running `npm run deploy:xxx` |
+| `CONTACT_EMAIL`      | The "to:" email for the contact form | Needed for running `npm run deploy:xxx` |
+| `DATABASE_URL`       | Database                             | All APIs except Events                  |
+| `DATABASE_TOKEN`     | Credentials needed for prod DB       | All APIs except Events                  |
 
-### Tasks
+## Tasks
 
-After installing the above, you can run the following key development commands:
+After getting setup, you can run the following development commands:
 
 - `npm run dev` - Starts **Greenwood**'s local development server
 - `npm run story:dev` - Runs [**Storybook**](https://storybook.js.org/) in development mode
@@ -42,7 +34,7 @@ After installing the above, you can run the following key development commands:
 
 > _See `package.json#scripts` for a full list of available commands._
 
-### Contact Form
+## Contact Form
 
 To test the contact form, you'll have to have a proper AWS config file setup and run the project with SST.
 
@@ -52,3 +44,10 @@ $ npx sst dev
 ```
 
 You can then open `localhost:1984` in the browser and send emails.
+
+## Prisma Studio
+
+To run Prisma studio locally:
+
+1. Run `npx prisma db push`
+1. In _.env_ update `DATABASE_URL` to _file:../sql/analogstudios-20240404.bak.db_

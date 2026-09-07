@@ -48,7 +48,10 @@ ssrPages.forEach((page) => {
     handler: "index.handler",
     runtime: RUNTIME,
     environment: {
-      API_BACKEND_HOSTNAME: process.env.API_BACKEND_HOSTNAME ?? "",
+      CONTENTFUL_SPACE: process.env.CONTENTFUL_SPACE ?? "",
+      CONTENTFUL_ACCESS_TOKEN: process.env.CONTENTFUL_ACCESS_TOKEN ?? "",
+      DATABASE_URL: process.env.DATABASE_URL ?? "",
+      DATABASE_TOKEN: process.env.DATABASE_TOKEN ?? "",
     },
   });
 });
@@ -65,5 +68,11 @@ apiRoutes.forEach((apiRoute) => {
     handler: "index.handler",
     runtime: RUNTIME,
     link,
+    environment: {
+      CONTENTFUL_SPACE: process.env.CONTENTFUL_SPACE ?? "",
+      CONTENTFUL_ACCESS_TOKEN: process.env.CONTENTFUL_ACCESS_TOKEN ?? "",
+      DATABASE_URL: process.env.DATABASE_URL ?? "",
+      DATABASE_TOKEN: process.env.DATABASE_TOKEN ?? "",
+    },
   });
 });
