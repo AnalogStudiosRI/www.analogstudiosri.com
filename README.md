@@ -14,13 +14,15 @@ Frontend website for [www.analogstudiosri.com](www.analogstudiosri.com) built wi
 
 A list of environment variables in a _.env_ file needed to run the project.
 
-| Name                 | Description                          | Notes                                   |
-| -------------------- | ------------------------------------ | --------------------------------------- |
-| `AWS_REGION`         | AWS region for SST                   | Needed for running `npm run deploy:xxx` |
-| `AWS_ROLE_TO_ASSUME` | IAM Role for running SST             | Needed for running `npm run deploy:xxx` |
-| `CONTACT_EMAIL`      | The "to:" email for the contact form | Needed for running `npm run deploy:xxx` |
-| `DATABASE_URL`       | Database                             | All APIs except Events                  |
-| `DATABASE_TOKEN`     | Credentials needed for prod DB       | All APIs except Events                  |
+| Name                              | Description                          | Notes                                   |
+| --------------------------------- | ------------------------------------ | --------------------------------------- |
+| `AWS_REGION`                      | AWS region for SST                   | Needed for running `npm run deploy:xxx` |
+| `AWS_ROLE_TO_ASSUME`              | IAM Role for running SST             | Needed for running `npm run deploy:xxx` |
+| `CONTACT_EMAIL`                   | The "to:" email for the contact form | Needed for running `npm run deploy:xxx` |
+| `CONTENTFUL_SPACE`                | Space ID for the CMS                 | For Contentful webhook APIs             |
+| `CONTENTFUL_WEBHOOK_ACCESS_TOKEN` | Token from Contentful webhooks       | For Contentful webhook APIs             |
+| `DATABASE_URL`                    | Database                             | All APIs except Events                  |
+| `DATABASE_TOKEN`                  | Credentials needed for prod DB       | All APIs except Events                  |
 
 ## Tasks
 
