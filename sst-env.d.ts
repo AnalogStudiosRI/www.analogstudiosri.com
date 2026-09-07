@@ -23,6 +23,10 @@ declare module "sst" {
       "sender": string
       "type": "sst.aws.Email"
     }
+    "ContentfulCache": {
+      "distributionId": string
+      "type": "sst.sst.Linkable"
+    }
   }
 }
 

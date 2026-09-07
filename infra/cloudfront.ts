@@ -1,5 +1,5 @@
 import { frontend } from "./static-site.ts";
-import { gateway } from "./api-gateway.ts";
+import { addApiRoutes, gateway } from "./api-gateway.ts";
 
 // TODO: pull this from Greenwood / config
 function getDynamicPages(compilation) {
@@ -104,3 +104,5 @@ export const router = new sst.aws.Router("AS-Website-Router", {
   },
   invalidation: true,
 });
+
+addApiRoutes(router);
