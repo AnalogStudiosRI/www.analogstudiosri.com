@@ -1,9 +1,6 @@
 import assert from "node:assert";
 import { beforeEach, describe, it, mock } from "node:test";
 
-process.env.AWS_ACCESS_KEY_ID = "aws-access-key";
-process.env.AWS_SECRET_ACCESS_KEY = "aws-secret-key";
-process.env.AWS_CLOUDFRONT_ID = "distribution-id";
 process.env.CONTENTFUL_WEBHOOK_ACCESS_TOKEN = "webhook-token";
 
 const clientConfigs: unknown[] = [];
@@ -23,6 +20,16 @@ class CloudFrontMock {
 mock.module("@aws-sdk/client-cloudfront", {
   namedExports: {
     CloudFront: CloudFrontMock,
+  },
+});
+
+mock.module("sst", {
+  namedExports: {
+    Resource: {
+      ContentfulCache: {
+        distributionId: "distribution-id",
+      },
+    },
   },
 });
 
@@ -59,14 +66,7 @@ describe("Contentful Webhook API", () => {
     assert.strictEqual(response.status, 200);
     assert.strictEqual(response.headers.get("content-type"), "application/json");
     assert.deepStrictEqual(await response.json(), { msg: "success" });
-    assert.deepStrictEqual(clientConfigs, [
-      {
-        region: "us-east-1",
-        accessKeyId: "aws-access-key",
-        secretAccessKey: "aws-secret-key",
-        distributionId: "distribution-id",
-      },
-    ]);
+    assert.deepStrictEqual(clientConfigs, [{}]);
     assert.strictEqual(createInvalidationMock.mock.callCount(), 1);
 
     const params = createInvalidationMock.mock.calls[0].arguments[0] as {

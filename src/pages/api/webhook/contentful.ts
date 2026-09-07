@@ -1,4 +1,5 @@
 import * as AWS from "@aws-sdk/client-cloudfront";
+import { Resource } from "sst";
 import { Temporal } from "temporal-polyfill";
 
 interface CloudfrontInvalidationParams {
@@ -12,15 +13,8 @@ interface CloudfrontInvalidationParams {
   };
 }
 
-const CONFIG = {
-  region: "us-east-1",
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  distributionId: process.env.AWS_CLOUDFRONT_ID,
-};
-
 export async function handler(request: Request) {
-  const cfClient = new AWS.CloudFront(CONFIG);
+  const cfClient = new AWS.CloudFront({});
   const body = await request.json();
   const headers = request.headers;
   const entity = body?.sys.contentType.sys.id || "";
@@ -30,7 +24,7 @@ export async function handler(request: Request) {
 
   // invalidate index.html in Cloudfront
   const params: CloudfrontInvalidationParams = {
-    DistributionId: CONFIG.distributionId ?? "",
+    DistributionId: Resource.ContentfulCache.distributionId,
     InvalidationBatch: {
       CallerReference: Temporal.Now.instant().epochMilliseconds.toString(),
       Paths: {

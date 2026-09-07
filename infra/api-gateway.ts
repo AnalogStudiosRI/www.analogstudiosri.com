@@ -50,29 +50,40 @@ ssrPages.forEach((page) => {
     environment: {
       CONTENTFUL_SPACE: process.env.CONTENTFUL_SPACE ?? "",
       CONTENTFUL_ACCESS_TOKEN: process.env.CONTENTFUL_ACCESS_TOKEN ?? "",
+      CONTENTFUL_WEBHOOK_ACCESS_TOKEN: process.env.CONTENTFUL_WEBHOOK_ACCESS_TOKEN ?? "",
       DATABASE_URL: process.env.DATABASE_URL ?? "",
       DATABASE_TOKEN: process.env.DATABASE_TOKEN ?? "",
     },
   });
 });
 
-apiRoutes.forEach((apiRoute) => {
-  const [route, { id }] = apiRoute;
+export function addApiRoutes(contentfulCache) {
+  apiRoutes.forEach((apiRoute) => {
+    const [route, { id }] = apiRoute;
 
-  // map SES to contact API route
-  const link = id === "contact" ? [email] : [];
+    // map one-off resources for contact and webhook APIs
+    const link = [
+      ...(id === "contact" ? [email] : []),
+      ...(id === "webhook-contentful" ? [contentfulCache] : []),
+    ];
 
-  // swap out [] for {} in route for AWS API Gateway compatibility
-  gateway.route(`ANY ${route.replace("[", "{").replace("]", "}")}`, {
-    bundle: `.aws-output/api/${id}`,
-    handler: "index.handler",
-    runtime: RUNTIME,
-    link,
-    environment: {
-      CONTENTFUL_SPACE: process.env.CONTENTFUL_SPACE ?? "",
-      CONTENTFUL_ACCESS_TOKEN: process.env.CONTENTFUL_ACCESS_TOKEN ?? "",
-      DATABASE_URL: process.env.DATABASE_URL ?? "",
-      DATABASE_TOKEN: process.env.DATABASE_TOKEN ?? "",
-    },
+    // swap out [] for {} in route for AWS API Gateway compatibility
+    gateway.route(`ANY ${route.replace("[", "{").replace("]", "}")}`, {
+      bundle: `.aws-output/api/${id}`,
+      handler: "index.handler",
+      runtime: RUNTIME,
+      link,
+      environment: {
+        CONTENTFUL_SPACE: process.env.CONTENTFUL_SPACE ?? "",
+        CONTENTFUL_ACCESS_TOKEN: process.env.CONTENTFUL_ACCESS_TOKEN ?? "",
+        DATABASE_URL: process.env.DATABASE_URL ?? "",
+        DATABASE_TOKEN: process.env.DATABASE_TOKEN ?? "",
+        ...(id === "webhook-contentful"
+          ? {
+              CONTENTFUL_WEBHOOK_ACCESS_TOKEN: process.env.CONTENTFUL_WEBHOOK_ACCESS_TOKEN ?? "",
+            }
+          : {}),
+      },
+    });
   });
-});
+}
