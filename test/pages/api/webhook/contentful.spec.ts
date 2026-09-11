@@ -60,6 +60,20 @@ describe("Contentful Webhook API", () => {
     clientConfigs.length = 0;
   });
 
+  it("should reject non-POST requests", async () => {
+    const response = await handler(
+      new Request("http://localhost:8080/api/webhook/contentful", {
+        method: "GET",
+        headers: { "x-contentful_webhook_access_token": "webhook-token" },
+      }),
+    );
+
+    assert.strictEqual(response.status, 405);
+    assert.strictEqual(response.headers.get("allow"), "POST");
+    assert.strictEqual(await response.text(), "Method Not Allowed");
+    assert.strictEqual(createInvalidationMock.mock.callCount(), 0);
+  });
+
   it("should invalidate the API cache for an authorized Contentful webhook", async () => {
     const response = await handler(contentfulRequest("webhook-token"));
 
@@ -98,6 +112,37 @@ describe("Contentful Webhook API", () => {
 
     assert.strictEqual(response.status, 404);
     assert.strictEqual(await response.text(), "Not Found");
+    assert.strictEqual(createInvalidationMock.mock.callCount(), 0);
+  });
+
+  it("should return a bad request when the JSON body is invalid", async () => {
+    const contentfulRequest = new Request("http://localhost:8080/api/webhook/contentful", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-contentful_webhook_access_token": "webhook-token",
+      },
+      body: "not-json",
+    });
+    const response = await handler(contentfulRequest);
+
+    assert.strictEqual(response.status, 400);
+    assert.deepStrictEqual(await response.json(), { msg: "Invalid JSON body" });
+    assert.strictEqual(createInvalidationMock.mock.callCount(), 0);
+  });
+
+  it("should return a bad request when the content type is missing", async () => {
+    const contentfulRequest = new Request("http://localhost:8080/api/webhook/contentful", {
+      method: "POST",
+      headers: {
+        "x-contentful_webhook_access_token": "webhook-token",
+      },
+      body: "{}",
+    });
+    const response = await handler(contentfulRequest);
+
+    assert.strictEqual(response.status, 400);
+    assert.deepStrictEqual(await response.json(), { msg: "Missing Contentful content type" });
     assert.strictEqual(createInvalidationMock.mock.callCount(), 0);
   });
 
