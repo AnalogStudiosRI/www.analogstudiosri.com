@@ -3,6 +3,7 @@ import { Resource } from "sst";
 import { Temporal } from "temporal-polyfill";
 
 const WEBHOOK_HEADER_NAME = "x-contentful_webhook_access_token" as const;
+
 interface CloudfrontInvalidationParams {
   DistributionId: string;
   InvalidationBatch: {
@@ -55,7 +56,8 @@ export async function handler(request: Request) {
   }
 
   try {
-    // invalidate index.html in Cloudfront
+    // invalidate corresponding API endpoint cache in Cloudfront
+    const cfClient = new AWS.CloudFront({});
     const params: CloudfrontInvalidationParams = {
       DistributionId: Resource.ContentfulCache.distributionId,
       InvalidationBatch: {
@@ -66,7 +68,7 @@ export async function handler(request: Request) {
         },
       },
     };
-    const cfClient = new AWS.CloudFront({});
+
     await cfClient.createInvalidation(params);
 
     return Response.json({ msg: "success" });
