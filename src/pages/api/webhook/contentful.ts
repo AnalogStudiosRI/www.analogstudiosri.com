@@ -56,6 +56,7 @@ export async function handler(request: Request) {
   }
 
   try {
+    const items = [`/api/${entity}s*`];
     // invalidate corresponding API endpoint cache in Cloudfront
     const cfClient = new AWS.CloudFront({});
     const params: CloudfrontInvalidationParams = {
@@ -63,8 +64,8 @@ export async function handler(request: Request) {
       InvalidationBatch: {
         CallerReference: Temporal.Now.instant().epochMilliseconds.toString(),
         Paths: {
-          Quantity: 1,
-          Items: [`/api/${entity}s*`],
+          Quantity: items.length,
+          Items: items,
         },
       },
     };
