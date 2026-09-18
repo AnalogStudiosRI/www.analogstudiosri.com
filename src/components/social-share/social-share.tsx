@@ -1,6 +1,9 @@
 import socialShareSheet from "./social-share.css" with { type: "css" };
 import themeSheet from "../../styles/theme.css" with { type: "css" };
 import { defineCustomElement } from "web-social-share";
+import type { Signal as SignalInterface } from "signal-polyfill";
+
+export const inferredObservability = true;
 
 // web social share's exports overrides its own types field
 // so have to craft it like this instead
@@ -19,9 +22,7 @@ declare global {
 }
 
 export default class SocialShare extends HTMLElement {
-  // TODO: use a signal for show / hide?
-  // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/22
-  #show: boolean = false;
+  show: SignalInterface.State<boolean>;
   #shareConfig: ShareConfig;
 
   constructor() {
@@ -29,6 +30,7 @@ export default class SocialShare extends HTMLElement {
 
     const socialShareUrl = typeof window !== "undefined" ? window.location.href : "";
 
+    this.show = new Signal.State(false);
     this.#shareConfig = {
       displayNames: true,
       config: [
@@ -77,20 +79,19 @@ export default class SocialShare extends HTMLElement {
         // https://github.com/peterpeterparker/web-social-share/issues/65
         shareElement.share = this.#shareConfig;
         shareElement.addEventListener("closed", () => {
-          this.#show = false;
+          this.show.set(false);
         });
       }, 1000);
     }
   }
 
   toggleShowSocialShare() {
-    this.#show = !this.#show;
-    this.shadowRoot
-      ?.querySelector("web-social-share")
-      ?.setAttribute("show", this.#show ? "true" : "");
+    this.show.set(!this.show.get());
   }
 
   render() {
+    const { show } = this;
+
     return (
       <div>
         <h2 class="header">Interact + Share</h2>
@@ -114,7 +115,7 @@ export default class SocialShare extends HTMLElement {
           SHARE THIS PAGE
         </button>
 
-        <web-social-share>
+        <web-social-share show={show.get()}>
           <i class="fa fa-facebook" slot="facebook"></i>
           <i class="fa fa-twitter" slot="twitter"></i>
           <i class="fa fa-pinterest" slot="pinterest"></i>
