@@ -40,7 +40,9 @@ const config: Config = {
   },
   plugins: [
     greenwoodPluginCssModules(),
-    greenwoodPluginImportJsx(),
+    greenwoodPluginImportJsx({
+      inferredObservability: true,
+    }),
     greenwoodPluginAdapterAws(),
     ...customRollupPlugins,
   ],
