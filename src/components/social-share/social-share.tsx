@@ -30,6 +30,8 @@ export default class SocialShare extends HTMLElement {
 
     const socialShareUrl = typeof window !== "undefined" ? window.location.href : "";
 
+    // TODO: see if we can support this a private member with WCC
+    // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/20
     this.show = new Signal.State(false);
     this.#shareConfig = {
       displayNames: true,
