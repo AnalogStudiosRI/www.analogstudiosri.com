@@ -10,16 +10,9 @@ const RUNTIME = "nodejs24.x";
 function getDynamicPages(compilation) {
   const { config, graph } = compilation;
 
-  // would be nice to do this without the extra conditional (good first issue)
-  return graph.filter((page) => {
-    let isSsrRoute = page.isSSR && !page.staticPaths && page.prerender !== true;
-
-    if (isSsrRoute && config.prerender && page.prerender !== false) {
-      isSsrRoute = false;
-    }
-
-    return isSsrRoute;
-  });
+  return graph.filter(
+    (page) => page.isSSR && !page.staticPaths && !(page.staticExport ?? config.staticExport),
+  );
 }
 
 const graph = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
@@ -29,7 +22,7 @@ const graph = // @ts-expect-error see https://github.com/microsoft/TypeScript/is
 const apiRoutes = (
   await import(new URL("../../public/manifest.json", import.meta.url), { with: { type: "json" } })
 ).default.apis.value;
-const ssrPages = getDynamicPages({ config: { prerender: true }, graph });
+const ssrPages = getDynamicPages({ config: { staticExport: false }, graph });
 
 // https://sst.dev/docs/component/aws/apigatewayv2
 // https://sst.dev/docs/component/aws/function
