@@ -46,3 +46,5 @@ export default class ArtistsPage extends HTMLElement {
     `;
   }
 }
+
+export const staticExport = true;

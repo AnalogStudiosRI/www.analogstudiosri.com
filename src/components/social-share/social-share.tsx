@@ -63,28 +63,25 @@ export default class SocialShare extends HTMLElement {
     this?.shadowRoot?.adoptedStyleSheets?.push(themeSheet, socialShareSheet);
     this.render();
 
-    // TODO: temp workaround for https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/23
-    if (typeof window !== "undefined") {
-      defineCustomElement();
+    defineCustomElement();
 
-      // TODO: how to best detect when the web-social-share component is ready to be interacted with
-      // is there an event we can listen for instead of using a timeout?
-      setTimeout(() => {
-        const shareElement = this.shadowRoot?.querySelector("web-social-share");
+    // TODO: how to best detect when the web-social-share component is ready to be interacted with
+    // is there an event we can listen for instead of using a timeout?
+    setTimeout(() => {
+      const shareElement = this.shadowRoot?.querySelector("web-social-share");
 
-        if (!shareElement) {
-          console.error("Share element not found");
-          return;
-        }
+      if (!shareElement) {
+        console.error("Share element not found");
+        return;
+      }
 
-        // have to set the property here instead of an attribute
-        // https://github.com/peterpeterparker/web-social-share/issues/65
-        shareElement.share = this.#shareConfig;
-        shareElement.addEventListener("closed", () => {
-          this.show.set(false);
-        });
-      }, 1000);
-    }
+      // have to set the property here instead of an attribute
+      // https://github.com/peterpeterparker/web-social-share/issues/65
+      shareElement.share = this.#shareConfig;
+      shareElement.addEventListener("closed", () => {
+        this.show.set(false);
+      });
+    }, 1000);
   }
 
   toggleShowSocialShare() {
