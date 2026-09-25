@@ -1,0 +1,24 @@
+diff --git a/node_modules/@greenwood/cli/src/lifecycles/bundle.js b/node_modules/@greenwood/cli/src/lifecycles/bundle.js
+index 1c85991..45ded9a 100644
+--- a/node_modules/@greenwood/cli/src/lifecycles/bundle.js
++++ b/node_modules/@greenwood/cli/src/lifecycles/bundle.js
+@@ -26,12 +26,15 @@ async function interceptPage(url, request, plugins, body) {
+   });
+ 
+   for (const plugin of plugins) {
+-    if (plugin.shouldPreIntercept && (await plugin.shouldPreIntercept(url, request, response))) {
+-      response = await plugin.preIntercept(url, request, response);
++    if (
++      plugin.shouldPreIntercept &&
++      (await plugin.shouldPreIntercept(url, request, response.clone()))
++    ) {
++      response = mergeResponse(response, await plugin.preIntercept(url, request, response.clone()));
+     }
+ 
+-    if (plugin.shouldIntercept && (await plugin.shouldIntercept(url, request, response))) {
+-      response = await plugin.intercept(url, request, response);
++    if (plugin.shouldIntercept && (await plugin.shouldIntercept(url, request, response.clone()))) {
++      response = mergeResponse(response, await plugin.intercept(url, request, response.clone()));
+     }
+   }
+ 
