@@ -1,0 +1,17 @@
+diff --git a/node_modules/@greenwood/plugin-import-jsx/src/index.js b/node_modules/@greenwood/plugin-import-jsx/src/index.js
+index 2004509..c2b8648 100644
+--- a/node_modules/@greenwood/plugin-import-jsx/src/index.js
++++ b/node_modules/@greenwood/plugin-import-jsx/src/index.js
+@@ -83,7 +83,11 @@ class ImportJsxResource {
+ 
+     newBody = root.toString();
+ 
+-    return new Response(newBody);
++    return new Response(newBody, {
++      headers: new Headers({
++        "Content-Type": "text/html",
++      }),
++    });
+   }
+ }
+ 
