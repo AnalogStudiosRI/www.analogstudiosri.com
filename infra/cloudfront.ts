@@ -5,16 +5,9 @@ import { addApiRoutes, gateway } from "./api-gateway.ts";
 function getDynamicPages(compilation) {
   const { config, graph } = compilation;
 
-  // would be nice to do this without the extra conditional (good first issue)
-  return graph.filter((page) => {
-    let isSsrRoute = page.isSSR && !page.staticPaths && page.prerender !== true;
-
-    if (isSsrRoute && config.prerender && page.prerender !== false) {
-      isSsrRoute = false;
-    }
-
-    return isSsrRoute;
-  });
+  return graph.filter(
+    (page) => page.isSSR && !page.staticPaths && !(page.staticExport ?? config.staticExport),
+  );
 }
 
 // TODO: pull this from Greenwood / config
@@ -22,20 +15,16 @@ function getStaticPages(compilation) {
   const { config, graph } = compilation;
 
   return graph.filter(
-    (page) =>
-      !page.isSSR ||
-      (page.isSSR && page.prerender) ||
-      (page.isSSR && page.prerender !== false && config.prerender) ||
-      page.staticPaths,
+    (page) => !page.isSSR || page.staticPaths || (page.staticExport ?? config.staticExport),
   );
 }
 
 const graph = // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/42866
   (await import(new URL("../../public/graph.json", import.meta.url), { with: { type: "json" } }))
     .default;
-const ssrPages = getDynamicPages({ config: { prerender: true }, graph });
+const ssrPages = getDynamicPages({ config: { staticExport: false }, graph });
 const ssrRoutes = {};
-const staticPages = getStaticPages({ config: { prerender: true }, graph });
+const staticPages = getStaticPages({ config: { staticExport: false }, graph });
 const staticRoutes = {};
 
 ssrPages.forEach((page) => {
@@ -44,13 +33,9 @@ ssrPages.forEach((page) => {
   if (segment?.key) {
     const basePattern = segment.pathname.replace(`/:${segment.key}/`, "");
 
+    // Preserve the public path so the generic adapter can match it exactly.
     ssrRoutes[`${basePattern}/*`] = {
       url: gateway.url,
-      rewrite: {
-        // use the + here to make sure we only match if there is something after the /
-        regex: `^${basePattern}/(.+)$`,
-        to: `/routes${basePattern}/$1`,
-      },
     };
   } else {
     const routePattern = `/${route

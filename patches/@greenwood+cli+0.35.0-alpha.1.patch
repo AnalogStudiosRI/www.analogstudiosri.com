@@ -1,0 +1,886 @@
+diff --git a/node_modules/@greenwood/cli/src/commands/build.js b/node_modules/@greenwood/cli/src/commands/build.js
+index c2661f5..ba862bf 100644
+--- a/node_modules/@greenwood/cli/src/commands/build.js
++++ b/node_modules/@greenwood/cli/src/commands/build.js
+@@ -6,18 +6,35 @@ import {
+   preRenderCompilationCustom,
+   staticRenderCompilation,
+ } from "../lifecycles/prerender.js";
++import { getPrerenderPages, getStaticPages } from "../lib/graph-utils.js";
+ 
+ const runProductionBuild = async (compilation) => {
+-  const { prerender, activeContent, plugins } = compilation.config;
++  const { activeContent, plugins } = compilation.config;
+   const prerenderPlugin = compilation.config.plugins.find((plugin) => plugin.type === "renderer")
+     ? compilation.config.plugins.find((plugin) => plugin.type === "renderer").provider(compilation)
+     : {};
+   const adapterPlugin = compilation.config.plugins.find((plugin) => plugin.type === "adapter")
+     ? compilation.config.plugins.find((plugin) => plugin.type === "adapter").provider(compilation)
+     : null;
+-  const pagesWithStaticPaths = compilation.graph.filter((page) => page.staticPaths);
+ 
+-  if (prerender || pagesWithStaticPaths.length > 0) {
++  // Group page based on different output conditions, with a page belonging to either set
++  const prerenderPages = getPrerenderPages(compilation);
++  const staticPages = getStaticPages(compilation);
++
++  // Custom renderers such as Puppeteer generate their own HTML, so exclude their non-SSR pages
++  // from the static render pass to avoid processing the same resources twice.
++  const customPrerenderPages = new Set(
++    prerenderPlugin.executeModuleUrl
++      ? []
++      : prerenderPages.filter((page) => staticPages.includes(page) && !page.isSSR),
++  );
++  const staticRenderPages = staticPages.filter((page) => !customPrerenderPages.has(page));
++
++  // Prerendering may need a browser-facing server, and static SSR routes must execute their route modules at build time.
++  // Plain static pages need neither.
++  const needsServerPlugins = prerenderPages.length > 0 || staticPages.some((page) => page.isSSR);
++
++  if (needsServerPlugins) {
+     // start any of the user's server plugins if needed
+     const servers = [
+       ...compilation.config.plugins
+@@ -40,14 +57,20 @@ const runProductionBuild = async (compilation) => {
+     }
+ 
+     await Promise.all(servers.map((server) => server.start()));
++  }
++
++  // Generate all static pages that emits HTML.
++  // This also provides the input HTML consumed by the worker prerenderer in the next phase.
++  await staticRenderCompilation(compilation, staticRenderPages);
+ 
++  // Execute browser JavaScript for opted-in pages.
++  // Runtime SSR pages are not written here as their prerendered application shells are created later while bundling their route handlers.
++  if (prerenderPages.length > 0) {
+     if (prerenderPlugin.executeModuleUrl) {
+       await preRenderCompilationWorker(compilation, prerenderPlugin);
+     } else {
+       await preRenderCompilationCustom(compilation, prerenderPlugin);
+     }
+-  } else {
+-    await staticRenderCompilation(compilation);
+   }
+ 
+   console.info("success, done generating all pages!");
+diff --git a/node_modules/@greenwood/cli/src/config/rollup.config.js b/node_modules/@greenwood/cli/src/config/rollup.config.js
+index 7cc80f1..64d43e4 100644
+--- a/node_modules/@greenwood/cli/src/config/rollup.config.js
++++ b/node_modules/@greenwood/cli/src/config/rollup.config.js
+@@ -59,6 +59,11 @@ function greenwoodResourceLoader(compilation, browser = false) {
+   return {
+     name: "greenwood-resource-loader",
+     async resolveId(id, importer, options) {
++      // Virtual modules do not represent files and are owned by the plugin that created them.
++      if (id.startsWith("\x00") || importer?.startsWith("\x00")) {
++        return null;
++      }
++
+       const { userWorkspace, scratchDir } = compilation.context;
+       const normalizedId = cleanRollupId(id);
+       const importerUrl = new URL(`file://${cleanRollupId(importer) ?? ""}`);
+@@ -95,6 +100,11 @@ function greenwoodResourceLoader(compilation, browser = false) {
+       }
+     },
+     async load(id) {
++      // Let the plugin that created a Rollup virtual module load it.
++      if (id.startsWith("\x00")) {
++        return null;
++      }
++
+       let idUrl = new URL(`file://${cleanRollupId(id)}`);
+       const { pathname } = idUrl;
+       const extension = pathname.split(".").pop();
+@@ -103,7 +113,7 @@ function greenwoodResourceLoader(compilation, browser = false) {
+       };
+ 
+       // filter first for any bare specifiers
+-      if ((await checkResourceExists(idUrl)) && !id.startsWith("\x00")) {
++      if (await checkResourceExists(idUrl)) {
+         if (extension !== "js") {
+           for (const plugin of resourcePlugins) {
+             if (plugin.shouldResolve && (await plugin.shouldResolve(idUrl))) {
+@@ -287,6 +297,11 @@ function greenwoodImportMetaUrl(compilation) {
+     name: "greenwood-import-meta-url",
+ 
+     async transform(code, id) {
++      // Virtual modules do not represent files and cannot be converted to file URLs.
++      if (id.startsWith("\x00")) {
++        return null;
++      }
++
+       const resourcePlugins = compilation.config.plugins
+         .filter((plugin) => {
+           return plugin.type === "resource";
+diff --git a/node_modules/@greenwood/cli/src/lib/execute-route-module.js b/node_modules/@greenwood/cli/src/lib/execute-route-module.js
+index 172e656..478a8b1 100644
+--- a/node_modules/@greenwood/cli/src/lib/execute-route-module.js
++++ b/node_modules/@greenwood/cli/src/lib/execute-route-module.js
+@@ -18,6 +18,7 @@ async function executeRouteModule({
+     html: null,
+     staticPaths: null,
+     hasStaticParams: null,
++    staticExport: null,
+   };
+ 
+   if (prerender) {
+@@ -30,6 +31,7 @@ async function executeRouteModule({
+     const { body, layout, frontmatter, statics } = contentOptions;
+     const {
+       prerender = null,
++      staticExport = null,
+       getLayout = null,
+       getBody = null,
+       getFrontmatter = null,
+@@ -102,6 +104,7 @@ async function executeRouteModule({
+     }
+ 
+     data.prerender = prerender;
++    data.staticExport = staticExport;
+     data.isolation = isolation;
+   }
+ 
+diff --git a/node_modules/@greenwood/cli/src/lib/graph-utils.js b/node_modules/@greenwood/cli/src/lib/graph-utils.js
+index 7db9c7b..06cfd4c 100644
+--- a/node_modules/@greenwood/cli/src/lib/graph-utils.js
++++ b/node_modules/@greenwood/cli/src/lib/graph-utils.js
+@@ -1,30 +1,41 @@
+-// pages that are pure SSR
++// determines whether browser JavaScript should run during the build.
++// A page-level value, including an explicit false, takes precedence over the project-wide default.
++function shouldPrerender(page, config) {
++  return page.prerender ?? config.prerender;
++}
++
++// determines whether an SSR route should be exported as HTML instead of bundled for request-time rendering.
++// This is intentionally independent from prerender configuration (`shouldPrerender`).
++function shouldStaticExport(page, config) {
++  return page.staticExport ?? config.staticExport;
++}
++
++// Static source pages (HTML, markdown, etc) and getStaticPaths routes always emit HTML.
++// Other SSR routes only emit HTML when `staticExport` is enabled for the route or project.
++function isStaticPage(page, config) {
++  return !page.isSSR || !!page.staticPaths || shouldStaticExport(page, config);
++}
++
++// Select SSR routes that still need request-time route bundles.
+ function getDynamicPages(compilation) {
+   const { config, graph } = compilation;
+ 
+-  // would be nice to do this without the extra conditional (good first issue)
+-  return graph.filter((page) => {
+-    let isSsrRoute = page.isSSR && !page.staticPaths && page.prerender !== true;
++  return graph.filter((page) => page.isSSR && !isStaticPage(page, config));
++}
+ 
+-    if (isSsrRoute && config.prerender && page.prerender !== false) {
+-      isSsrRoute = false;
+-    }
++// Select every page that should emit an HTML file during the static render phase.
++function getStaticPages(compilation) {
++  const { config, graph } = compilation;
+ 
+-    return isSsrRoute;
+-  });
++  return graph.filter((page) => isStaticPage(page, config));
+ }
+ 
+-// pages that emit an HTML file
+-function getStaticPages(compilation) {
++// Select every page whose browser JavaScript should be executed during the build. Whether these
++// pages emit HTML or remain runtime SSR routes is decided separately.
++function getPrerenderPages(compilation) {
+   const { config, graph } = compilation;
+ 
+-  return graph.filter(
+-    (page) =>
+-      !page.isSSR ||
+-      (page.isSSR && page.prerender) ||
+-      (page.isSSR && page.prerender !== false && config.prerender) ||
+-      page.staticPaths,
+-  );
++  return graph.filter((page) => shouldPrerender(page, config));
+ }
+ 
+ // get a page by route; including getStaticPaths or dynamic SSR pages
+@@ -66,4 +77,12 @@ function getMatchingPageByRoute(compilation, route) {
+   }
+ }
+ 
+-export { getDynamicPages, getStaticPages, getMatchingPageByRoute };
++export {
++  getDynamicPages,
++  getStaticPages,
++  getPrerenderPages,
++  getMatchingPageByRoute,
++  isStaticPage,
++  shouldPrerender,
++  shouldStaticExport,
++};
+diff --git a/node_modules/@greenwood/cli/src/lifecycles/bundle.js b/node_modules/@greenwood/cli/src/lifecycles/bundle.js
+index 5addb65..908243e 100644
+--- a/node_modules/@greenwood/cli/src/lifecycles/bundle.js
++++ b/node_modules/@greenwood/cli/src/lifecycles/bundle.js
+@@ -1,5 +1,6 @@
+ // @ts-nocheck
+ import fs from "node:fs/promises";
++import os from "node:os";
+ import {
+   getRollupConfigForApiRoutes,
+   getRollupConfigForBrowserScripts,
+@@ -17,7 +18,9 @@ import path from "node:path";
+ import { rollup } from "rollup";
+ import { pruneGraph } from "../lib/content-utils.js";
+ import { asyncForEach } from "../lib/async-utils.js";
+-import { getDynamicPages, getStaticPages } from "../lib/graph-utils.js";
++import { getDynamicPages, getStaticPages, shouldPrerender } from "../lib/graph-utils.js";
++import { executePageScripts } from "./prerender.js";
++import { WorkerPool } from "../lib/threadpool.js";
+ import { getStaticRouteFromDynamicRoute, getOutputHrefForStaticPath } from "../lib/url-utils.js";
+ 
+ async function interceptPage(url, request, plugins, body) {
+@@ -327,9 +330,18 @@ async function bundleSsrPages(compilation, optimizePlugins) {
+   const input = [];
+ 
+   if (ssrPages.length > 0) {
+-    const { executeModuleUrl } = config.plugins
+-      .find((plugin) => plugin.type === "renderer")
+-      .provider();
++    const renderer = config.plugins.find((plugin) => plugin.type === "renderer").provider();
++    const { executeModuleUrl } = renderer;
++    const prerenderSsrPages = ssrPages.filter((page) => shouldPrerender(page, config));
++
++    if (prerenderSsrPages.length > 0 && !executeModuleUrl) {
++      throw new Error("The configured renderer does not support prerendering runtime SSR routes.");
++    }
++
++    const prerenderPool =
++      prerenderSsrPages.length > 0
++        ? new WorkerPool(os.cpus().length, new URL("../lib/ssr-route-worker.js", import.meta.url))
++        : null;
+     const { pagesDir, scratchDir } = context;
+     // SSR pages do not support static / SPA routing (yet)
+     // https://github.com/ProjectEvergreen/greenwood/discussions/1033
+@@ -357,6 +369,16 @@ async function bundleSsrPages(compilation, optimizePlugins) {
+ 
+       await trackResourcesForRoute(staticHtml, compilation, route);
+ 
++      if (shouldPrerender(page, config)) {
++        staticHtml = await executePageScripts(
++          compilation,
++          renderer,
++          prerenderPool,
++          page,
++          staticHtml,
++        );
++      }
++
+       ssrPrerenderPagesRouteMapper[route] = staticHtml;
+     });
+ 
+diff --git a/node_modules/@greenwood/cli/src/lifecycles/config.js b/node_modules/@greenwood/cli/src/lifecycles/config.js
+index 846a956..f199ad0 100644
+--- a/node_modules/@greenwood/cli/src/lifecycles/config.js
++++ b/node_modules/@greenwood/cli/src/lifecycles/config.js
+@@ -75,6 +75,7 @@ const defaultConfig = {
+   },
+   port: 8080,
+   prerender: false,
++  staticExport: false,
+   useTsc: false,
+   workspace: new URL("./src/", cwd),
+ };
+@@ -110,6 +111,7 @@ const readAndMergeConfig = async () => {
+       plugins,
+       port,
+       prerender,
++      staticExport,
+       basePath,
+       staticRouter,
+       pagesDirectory,
+@@ -282,6 +284,15 @@ const readAndMergeConfig = async () => {
+       }
+     }
+ 
++    if (staticExport !== undefined) {
++      if (typeof staticExport === "boolean") {
++        customConfig.staticExport = staticExport;
++      } else {
++        return Promise.reject(
++          `Configuration error: staticExport must be a boolean; true or false.  Passed value was typeof: ${typeof staticExport}`,
++        );
++      }
++    }
+     // SPA should _not_ prerender unless if user has specified prerender should be true
+     if (prerender === undefined && isSPA) {
+       customConfig.prerender = false;
+diff --git a/node_modules/@greenwood/cli/src/lifecycles/graph.js b/node_modules/@greenwood/cli/src/lifecycles/graph.js
+index 0fe6eed..67ae03c 100644
+--- a/node_modules/@greenwood/cli/src/lifecycles/graph.js
++++ b/node_modules/@greenwood/cli/src/lifecycles/graph.js
+@@ -57,6 +57,16 @@ function trackCollectionsForPage(page, collections) {
+   }
+ }
+ 
++function getBooleanPageOption(name, ...values) {
++  const value = values.find((val) => val !== undefined && val !== null);
++
++  if (value !== undefined && value !== null && typeof value !== "boolean") {
++    throw new Error(`Page option "${name}" must be a boolean; true or false.`);
++  }
++
++  return value ?? null;
++}
++
+ const generateGraph = async (compilation) => {
+   const { context, config } = compilation;
+   const { basePath } = config;
+@@ -146,7 +156,8 @@ const generateGraph = async (compilation) => {
+           let label = getLabelFromRoute(`${route}/`);
+           let imports = [];
+           let customData = {};
+-          let prerender = isStatic === true ? true : null;
++          let prerender = null;
++          let staticExport = null;
+           let isolation = false;
+           let hydration = false;
+           let staticPaths = null;
+@@ -178,6 +189,8 @@ const generateGraph = async (compilation) => {
+             title = attributes.title || title;
+             label = attributes.label || label;
+             imports = attributes.imports || [];
++            prerender = getBooleanPageOption("prerender", attributes.prerender);
++            staticExport = getBooleanPageOption("staticExport", attributes.staticExport);
+ 
+             customData = attributes;
+           } else if (isDynamic) {
+@@ -191,25 +204,37 @@ const generateGraph = async (compilation) => {
+               const worker = new Worker(new URL("../lib/ssr-route-worker.js", import.meta.url));
+ 
+               worker.on("message", (result) => {
+-                prerender =
+-                  result.prerender === true || result.prerender === false ? result.prerender : null;
+-                isolation = result.isolation ?? isolation;
+-                hydration = result.hydration ?? hydration;
+-
+-                if (result.frontmatter) {
+-                  result.frontmatter.imports = result.frontmatter.imports || [];
+-                  ssrFrontmatter = result.frontmatter;
++                try {
++                  prerender = getBooleanPageOption(
++                    "prerender",
++                    result.prerender,
++                    result.frontmatter?.prerender,
++                  );
++                  staticExport = getBooleanPageOption(
++                    "staticExport",
++                    result.staticExport,
++                    result.frontmatter?.staticExport,
++                  );
++                  isolation = result.isolation ?? isolation;
++                  hydration = result.hydration ?? hydration;
++
++                  if (result.frontmatter) {
++                    result.frontmatter.imports = result.frontmatter.imports || [];
++                    ssrFrontmatter = result.frontmatter;
++                  }
++
++                  if (result.staticPaths) {
++                    staticPaths = result.staticPaths;
++                  }
++
++                  if (result.hasStaticParams) {
++                    hasStaticParams = result.hasStaticParams;
++                  }
++
++                  resolve();
++                } catch (error) {
++                  reject(error);
+                 }
+-
+-                if (result.staticPaths) {
+-                  staticPaths = result.staticPaths;
+-                }
+-
+-                if (result.hasStaticParams) {
+-                  hasStaticParams = result.hasStaticParams;
+-                }
+-
+-                resolve();
+               });
+               worker.on("error", reject);
+               worker.on("exit", (code) => {
+@@ -246,7 +271,7 @@ const generateGraph = async (compilation) => {
+           }
+ 
+           // prune "reserved" frontmatter that are supported by Greenwood
+-          [...activeFrontmatterKeys, "layout"].forEach((key) => {
++          [...activeFrontmatterKeys, "layout", "prerender", "staticExport"].forEach((key) => {
+             delete customData[key];
+           });
+ 
+@@ -264,7 +289,8 @@ const generateGraph = async (compilation) => {
+            * outputHref: href to the file in the output folder
+            * pageHref: href to the page's filesystem file
+            * isSSR: if this is a server side route
+-           * prerender: if this page should be statically exported
++           * prerender: if this page should execute browser JavaScript at build time
++           * staticExport: if this SSR page should be emitted as static HTML
+            * isolation: if this page should be run in isolated mode
+            * hydration: if this page needs hydration support
+            * servePage: signal that this is a custom page file type (static | dynamic)
+@@ -291,6 +317,7 @@ const generateGraph = async (compilation) => {
+                 : new URL(`.${route}index.html`, outputDir).href,
+             isSSR: isDynamic,
+             prerender,
++            staticExport,
+             isolation,
+             hydration,
+             servePage: isCustom ? isCustom : isDynamic ? "dynamic" : "static",
+@@ -326,7 +353,8 @@ const generateGraph = async (compilation) => {
+       data: {},
+       imports: [],
+       resources: [],
+-      prerender: false,
++      prerender: null,
++      staticExport: false,
+       isolation: false,
+       pageHref: new URL("./index.html", userWorkspace).href,
+       isSPA: true,
+diff --git a/node_modules/@greenwood/cli/src/lifecycles/prerender.js b/node_modules/@greenwood/cli/src/lifecycles/prerender.js
+index 274ad2d..50ad0ee 100644
+--- a/node_modules/@greenwood/cli/src/lifecycles/prerender.js
++++ b/node_modules/@greenwood/cli/src/lifecycles/prerender.js
+@@ -7,7 +7,7 @@ import {
+ import os from "node:os";
+ import { WorkerPool } from "../lib/threadpool.js";
+ import { asyncForEach } from "../lib/async-utils.js";
+-import { getStaticPages } from "../lib/graph-utils.js";
++import { getPrerenderPages, getStaticPages } from "../lib/graph-utils.js";
+ import {
+   getParamsFromSegment,
+   getStaticRouteFromDynamicRoute,
+@@ -73,161 +73,96 @@ function toScratchUrl(outputHref, context) {
+   return new URL(`./${outputHref.replace(outputDir.href, "")}`, scratchDir);
+ }
+ 
+-async function preRenderCompilationWorker(compilation, workerPrerender) {
+-  const pages = getStaticPages(compilation);
+-  const { context, config } = compilation;
+-  const plugins = getPluginInstances(compilation);
++// Execute browser scripts against HTML that has already been rendered.
++// For SSR pages, preserve the route content and only transform the surrounding application shell.
++async function executePageScripts(compilation, workerPrerender, pool, page, html, params) {
++  const ssrContentsMatch = /<!-- greenwood-ssr-start -->(.*.)<!-- greenwood-ssr-end -->/s;
++  const ssrMatch = page.isSSR ? html.match(ssrContentsMatch) : null;
++  const ssrContents = ssrMatch
++    ? ssrMatch[0]
++        .replace("<!-- greenwood-ssr-start -->", "")
++        .replace("<!-- greenwood-ssr-end -->", "")
++    : null;
++  let body = ssrMatch
++    ? html.replace(ssrMatch[0], "<!-- greenwood-ssr-start --><!-- greenwood-ssr-end -->")
++    : html;
++  const resources = await trackResourcesForRoute(body, compilation, page.route);
++  const scripts = resources
++    .filter((resource) => resource.type === "script")
++    .map((resource) => resource.sourcePathURL.href);
++
++  body = await new Promise((resolve, reject) => {
++    pool.runTask(
++      {
++        executeModuleUrl: workerPrerender.executeModuleUrl.href,
++        modulePath: null,
++        compilation: JSON.stringify(compilation),
++        page: JSON.stringify(page),
++        prerender: true,
++        htmlContents: body,
++        scripts: JSON.stringify(scripts),
++        params: params ? JSON.stringify(params) : params,
++      },
++      (err, result) => {
++        if (err) {
++          return reject(err);
++        }
+ 
+-  console.info("pages to generate", `\n ${pages.map((page) => page.route).join("\n ")}`);
++        return resolve(result.html);
++      },
++    );
++  });
+ 
++  return ssrContents === null
++    ? body
++    : body.replace("<!-- greenwood-ssr-start --><!-- greenwood-ssr-end -->", ssrContents);
++}
++
++async function preRenderCompilationWorker(compilation, workerPrerender) {
++  const staticPages = new Set(getStaticPages(compilation));
++  const pages = getPrerenderPages(compilation).filter((page) => staticPages.has(page));
++  const { context, config } = compilation;
+   const pool = new WorkerPool(
+     os.cpus().length,
+     new URL("../lib/ssr-route-worker.js", import.meta.url),
+   );
+ 
+-  // we could try and refactor / consolidate here some of the duplicate logic
++  console.info("pages to prerender", `\n ${pages.map((page) => page.route).join("\n ")}`);
++
+   await asyncForEach(pages, async (page) => {
+     if (page.staticPaths) {
+       for (const staticPath of page.staticPaths) {
+         const { route, outputHref, segment } = page;
+         const staticRoute = getStaticRouteFromDynamicRoute(staticPath, segment, route);
+-        const url = new URL(`http://localhost:${config.port}${staticRoute}`);
+-        const request = new Request(url);
+         const scratchUrl = toScratchUrl(
+           getOutputHrefForStaticPath(staticPath, segment, outputHref),
+           context,
+         );
+-        let ssrContents;
+-        let params = getParamsFromSegment(compilation, page.segment, staticRoute) ?? {};
+-
+-        // do we negate the worker pool by also running this, outside the pool?
+-        let body = await (await servePage(url, request, plugins)).text();
+-        body = await (await interceptPage(url, request, plugins, body)).text();
+-
+-        // hack to avoid over-rendering SSR content
+-        // https://github.com/ProjectEvergreen/greenwood/issues/1044
+-        // https://github.com/ProjectEvergreen/greenwood/issues/988#issuecomment-1288168858
+-        if (page.isSSR) {
+-          const ssrContentsMatch = /<!-- greenwood-ssr-start -->(.*.)<!-- greenwood-ssr-end -->/s;
+-          const match = body.match(ssrContentsMatch);
+-
+-          if (match) {
+-            ssrContents = match[0];
+-            body = body.replace(
+-              ssrContents,
+-              "<!-- greenwood-ssr-start --><!-- greenwood-ssr-end -->",
+-            );
+-
+-            ssrContents = ssrContents
+-              .replace("<!-- greenwood-ssr-start -->", "")
+-              .replace("<!-- greenwood-ssr-end -->", "");
+-          }
+-        }
+-
+-        const resources = await trackResourcesForRoute(body, compilation, route);
+-        const scripts = resources
+-          .filter((resource) => resource.type === "script")
+-          .map((resource) => resource.sourcePathURL.href);
+-
+-        body = await new Promise((resolve, reject) => {
+-          pool.runTask(
+-            {
+-              executeModuleUrl: workerPrerender.executeModuleUrl.href,
+-              modulePath: null,
+-              compilation: JSON.stringify(compilation),
+-              page: JSON.stringify(page),
+-              prerender: true,
+-              htmlContents: body,
+-              scripts: JSON.stringify(scripts),
+-              params: params ? JSON.stringify(params) : params,
+-            },
+-            (err, result) => {
+-              if (err) {
+-                return reject(err);
+-              }
+-
+-              return resolve(result.html);
+-            },
+-          );
+-        });
+-
+-        if (page.isSSR) {
+-          body = body.replace(
+-            "<!-- greenwood-ssr-start --><!-- greenwood-ssr-end -->",
+-            ssrContents,
+-          );
+-        }
++        const params = getParamsFromSegment(compilation, page.segment, staticRoute) ?? {};
++        const body = await executePageScripts(
++          compilation,
++          workerPrerender,
++          pool,
++          page,
++          await fs.readFile(scratchUrl, "utf-8"),
++          params,
++        );
+ 
+-        await createOutputDirectory(new URL(scratchUrl.href.replace("index.html", "")));
+         await fs.writeFile(scratchUrl, body);
+-
+-        console.info("generated static path...", staticRoute);
++        console.info("prerendered static path...", staticRoute);
+       }
+     } else {
+-      const { route, outputHref } = page;
+-      const scratchUrl = toScratchUrl(outputHref, context);
+-      const url = new URL(`http://localhost:${config.port}${route}`);
+-      const request = new Request(url);
+-      let ssrContents;
+-
+-      // do we negate the worker pool by also running this, outside the pool?
+-      let body = await (await servePage(url, request, plugins)).text();
+-      body = await (await interceptPage(url, request, plugins, body)).text();
+-
+-      // hack to avoid over-rendering SSR content
+-      // https://github.com/ProjectEvergreen/greenwood/issues/1044
+-      // https://github.com/ProjectEvergreen/greenwood/issues/988#issuecomment-1288168858
+-      if (page.isSSR) {
+-        const ssrContentsMatch = /<!-- greenwood-ssr-start -->(.*.)<!-- greenwood-ssr-end -->/s;
+-        const match = body.match(ssrContentsMatch);
+-
+-        if (match) {
+-          ssrContents = match[0];
+-          body = body.replace(
+-            ssrContents,
+-            "<!-- greenwood-ssr-start --><!-- greenwood-ssr-end -->",
+-          );
+-
+-          ssrContents = ssrContents
+-            .replace("<!-- greenwood-ssr-start -->", "")
+-            .replace("<!-- greenwood-ssr-end -->", "");
+-        }
+-      }
++      const scratchUrl = toScratchUrl(page.outputHref, context);
++      const body = await executePageScripts(
++        compilation,
++        workerPrerender,
++        pool,
++        page,
++        await fs.readFile(scratchUrl, "utf-8"),
++      );
+ 
+-      const resources = await trackResourcesForRoute(body, compilation, route);
+-      const scripts = resources
+-        .filter((resource) => resource.type === "script")
+-        .map((resource) => resource.sourcePathURL.href);
+-
+-      body = await new Promise((resolve, reject) => {
+-        pool.runTask(
+-          {
+-            executeModuleUrl: workerPrerender.executeModuleUrl.href,
+-            modulePath: null,
+-            compilation: JSON.stringify(compilation),
+-            page: JSON.stringify(page),
+-            prerender: true,
+-            htmlContents: body,
+-            scripts: JSON.stringify(scripts),
+-          },
+-          (err, result) => {
+-            if (err) {
+-              return reject(err);
+-            }
+-
+-            return resolve(result.html);
+-          },
+-        );
+-      });
+-
+-      if (page.isSSR) {
+-        body = body.replace("<!-- greenwood-ssr-start --><!-- greenwood-ssr-end -->", ssrContents);
+-      }
+-
+-      await createOutputDirectory(new URL(scratchUrl.href.replace("index.html", "")));
+       await fs.writeFile(scratchUrl, body);
+-
+-      console.info("generated page...", route);
++      console.info("prerendered page...", page.route);
+     }
+   });
+ }
+@@ -236,13 +171,12 @@ async function preRenderCompilationCustom(compilation, customPrerender) {
+   const { config, context } = compilation;
+   const renderer = (await import(customPrerender.customUrl)).default;
+   const { importMaps } = config.polyfills;
++  const pages = getPrerenderPages(compilation).filter((page) => !page.isSSR);
++  const prerenderCompilation = { ...compilation, graph: pages };
+ 
+-  console.info(
+-    "pages to generate",
+-    `\n ${compilation.graph.map((page) => page.route).join("\n ")}`,
+-  );
++  console.info("pages to prerender", `\n ${pages.map((page) => page.route).join("\n ")}`);
+ 
+-  await renderer(compilation, async (page, body) => {
++  await renderer(prerenderCompilation, async (page, body) => {
+     const { route, outputHref } = page;
+     const scratchUrl = toScratchUrl(outputHref, context);
+ 
+@@ -266,30 +200,44 @@ async function preRenderCompilationCustom(compilation, customPrerender) {
+   });
+ }
+ 
+-async function staticRenderCompilation(compilation) {
++async function staticRenderCompilation(compilation, pages = getStaticPages(compilation)) {
+   const { config, context } = compilation;
+-  const pages = compilation.graph.filter((page) => !page.isSSR || (page.isSSR && page.prerender));
+   const plugins = getPluginInstances(compilation);
+-
+-  console.info("pages to generate", `\n ${pages.map((page) => page.route).join("\n ")}`);
+-
+-  await asyncForEach(pages, async (page) => {
+-    const { route, outputHref } = page;
++  const renderPage = async (route, outputHref, message) => {
+     const scratchUrl = toScratchUrl(outputHref, context);
+     const url = new URL(`http://localhost:${config.port}${route}`);
+     const request = new Request(url);
+-
+     let body = await (await servePage(url, request, plugins)).text();
++
+     body = await (await interceptPage(url, request, plugins, body)).text();
+ 
+     await trackResourcesForRoute(body, compilation, route);
+     await createOutputDirectory(new URL(scratchUrl.href.replace("index.html", "")));
+     await fs.writeFile(scratchUrl, body);
++    console.info(message, route);
++  };
+ 
+-    console.info("generated page...", route);
++  console.info("pages to generate", `\n ${pages.map((page) => page.route).join("\n ")}`);
++
++  await asyncForEach(pages, async (page) => {
++    if (page.staticPaths) {
++      for (const staticPath of page.staticPaths) {
++        const staticRoute = getStaticRouteFromDynamicRoute(staticPath, page.segment, page.route);
++        const outputHref = getOutputHrefForStaticPath(staticPath, page.segment, page.outputHref);
++
++        await renderPage(staticRoute, outputHref, "generated static path...");
++      }
++    } else {
++      await renderPage(page.route, page.outputHref, "generated page...");
++    }
+ 
+     return Promise.resolve();
+   });
+ }
+ 
+-export { preRenderCompilationWorker, preRenderCompilationCustom, staticRenderCompilation };
++export {
++  preRenderCompilationWorker,
++  preRenderCompilationCustom,
++  executePageScripts,
++  staticRenderCompilation,
++};
+diff --git a/node_modules/@greenwood/cli/src/lifecycles/serve.js b/node_modules/@greenwood/cli/src/lifecycles/serve.js
+index d77c738..50e8407 100644
+--- a/node_modules/@greenwood/cli/src/lifecycles/serve.js
++++ b/node_modules/@greenwood/cli/src/lifecycles/serve.js
+@@ -16,6 +16,7 @@ import {
+ } from "../lib/url-utils.js";
+ import { Readable } from "node:stream";
+ import { Worker } from "node:worker_threads";
++import { isStaticPage } from "../lib/graph-utils.js";
+ 
+ async function getDevServer(compilation) {
+   const app = new Koa();
+@@ -322,13 +323,8 @@ async function getStaticServer(compilation, composable) {
+         compilation.graph.find((page) => page.route === url.pathname) ||
+         getMatchingDynamicSsrRoute(compilation, url.pathname);
+       const isSPA = compilation.graph.find((page) => page.isSPA);
+-      const { isSSR, staticPaths } = matchingRoute || {};
+       const extension = url.pathname.split(".").pop();
+-      const isStatic =
+-        !!staticPaths ||
+-        (matchingRoute && !isSSR) ||
+-        (isSSR && compilation.config.prerender) ||
+-        (isSSR && matchingRoute.prerender);
++      const isStatic = matchingRoute && isStaticPage(matchingRoute, compilation.config);
+ 
+       if (
+         ctx.response.status === 404 &&
+@@ -382,18 +378,8 @@ async function getHybridServer(compilation) {
+         pathname,
+       );
+       const matchingRouteWithSegment = getMatchingDynamicSsrRoute(compilation, pathname) || {};
+-      let isDynamicRoute =
+-        (matchingRoute.isSSR || matchingRouteWithSegment.isSSR) &&
+-        !matchingRouteWithSegment.staticPaths;
+-
+-      if (
+-        (matchingRoute.isSSR && config.prerender === true && matchingRoute.prerender !== false) ||
+-        (matchingApiRouteWithSegment?.isSSR &&
+-          config.prerender === true &&
+-          matchingRouteWithSegment?.prerender !== false)
+-      ) {
+-        isDynamicRoute = false;
+-      }
++      const dynamicPage = matchingRoute.isSSR ? matchingRoute : matchingRouteWithSegment;
++      const isDynamicRoute = dynamicPage.isSSR && !isStaticPage(dynamicPage, config);
+ 
+       if (isDynamicRoute) {
+         const entryPointUrl = new URL(
+diff --git a/node_modules/@greenwood/cli/src/runtimes/node/register.js b/node_modules/@greenwood/cli/src/runtimes/node/register.js
+index 907edfe..60c9a68 100644
+--- a/node_modules/@greenwood/cli/src/runtimes/node/register.js
++++ b/node_modules/@greenwood/cli/src/runtimes/node/register.js
+@@ -1,17 +1,27 @@
+ // entry point for NodeJS custom loader hooks, e.g. `node --import @greenwood/cli/register`
+ import { registerHooks } from "node:module";
+-import { SHARE_ENV } from "node:worker_threads";
++import { SHARE_ENV, workerData } from "node:worker_threads";
+ import { initializeSyncWorkerBridge } from "../bridge.js";
+ 
+-registerHooks(
+-  initializeSyncWorkerBridge(new URL("./worker.js", import.meta.url), {
+-    workerOptions: {
+-      // share read / write access to process.env across parent / child worker threads, like `__GWD_COMMAND__`
+-      // https://nodejs.org/docs/latest-v24.x/api/worker_threads.html#worker_threadsshare_env
+-      env: SHARE_ENV,
+-      // send `[]` to prevent the initial loader hook (--import @greenwood/cli/register``) from inheriting itself as part of `process.execArgv`
+-      // and thus have register calling itself recursively
+-      execArgv: [],
+-    },
+-  }),
+-);
++const GREENWOOD_LOADER_NODE_REGISTER = "greenwood-loader-node-register";
++
++// Node propagates `--import` preloads from `NODE_OPTIONS` into workers,
++// and Greenwood’s register module creates its own worker so that worker preloads the register module again and the synchronous bridge deadlocks.
++// we use a guard here to prevent the worker backing the bridge from registering another bridge when this module is preloaded through `NODE_OPTIONS`
++// https://nodejs.org/download/release/v24.13.1/docs/api/cli.html#--importmodule
++// https://github.com/ProjectEvergreen/greenwood/pull/1795
++if (workerData !== GREENWOOD_LOADER_NODE_REGISTER) {
++  registerHooks(
++    initializeSyncWorkerBridge(new URL("./worker.js", import.meta.url), {
++      workerOptions: {
++        // share read / write access to process.env across parent / child worker threads, like `__GWD_COMMAND__`
++        // https://nodejs.org/docs/latest-v24.x/api/worker_threads.html#worker_threadsshare_env
++        env: SHARE_ENV,
++        // send `[]` to prevent the initial loader hook (--import @greenwood/cli/register``) from inheriting itself as part of `process.execArgv`
++        // and thus have register calling itself recursively
++        execArgv: [],
++        workerData: GREENWOOD_LOADER_NODE_REGISTER,
++      },
++    }),
++  );
++}
+\ No newline at end of file
+diff --git a/node_modules/@greenwood/cli/src/types/compilation.d.ts b/node_modules/@greenwood/cli/src/types/compilation.d.ts
+index aaf5ff6..7d0bc01 100644
+--- a/node_modules/@greenwood/cli/src/types/compilation.d.ts
++++ b/node_modules/@greenwood/cli/src/types/compilation.d.ts
+@@ -23,6 +23,8 @@ export type Frontmatter = {
+   layout?: string;
+   title?: string;
+   imports?: string[];
++  prerender?: boolean;
++  staticExport?: boolean;
+   data?: {
+     [key: string]: string;
+   };
+diff --git a/node_modules/@greenwood/cli/src/types/config.d.ts b/node_modules/@greenwood/cli/src/types/config.d.ts
+index 1dd79fe..85aec90 100644
+--- a/node_modules/@greenwood/cli/src/types/config.d.ts
++++ b/node_modules/@greenwood/cli/src/types/config.d.ts
+@@ -23,6 +23,7 @@ export type Config = {
+   };
+   port?: number;
+   prerender?: boolean;
++  staticExport?: boolean;
+   staticRouter?: boolean;
+   useTsc?: boolean;
+   workspace?: URL | string;

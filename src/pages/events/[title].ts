@@ -44,5 +44,3 @@ export default class EventDetailsPage extends HTMLElement {
     `;
   }
 }
-
-export const prerender = false;
