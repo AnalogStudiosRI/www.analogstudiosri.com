@@ -1,0 +1,13 @@
+diff --git a/node_modules/@greenwood/plugin-import-jsx/src/index.js b/node_modules/@greenwood/plugin-import-jsx/src/index.js
+index 2004509..8bde010 100644
+--- a/node_modules/@greenwood/plugin-import-jsx/src/index.js
++++ b/node_modules/@greenwood/plugin-import-jsx/src/index.js
+@@ -62,7 +62,7 @@ class ImportJsxResource {
+       newBody = mergeImportMap(newBody, importMap, polyfills.importMaps);
+     }
+ 
+-    const root = parse(newBody);
++    const root = parse(newBody, { comment: true });
+     const signalScript = parse(`
+       <script type="module">
+         import { Signal } from 'signal-polyfill';
