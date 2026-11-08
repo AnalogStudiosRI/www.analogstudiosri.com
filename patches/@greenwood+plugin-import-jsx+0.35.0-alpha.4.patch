@@ -1,0 +1,13 @@
+diff --git a/node_modules/@greenwood/plugin-import-jsx/src/index.js b/node_modules/@greenwood/plugin-import-jsx/src/index.js
+index d3bd8eb..c5f0431 100644
+--- a/node_modules/@greenwood/plugin-import-jsx/src/index.js
++++ b/node_modules/@greenwood/plugin-import-jsx/src/index.js
+@@ -11,7 +11,7 @@ import { parse } from "node-html-parser";
+ 
+ const importMap = {
+   "signal-polyfill": "/node_modules/signal-polyfill/dist/index.js",
+-  "wc-compiler/effect": "/node_modules/wc-compiler/src/effect.js",
++  "wc-compiler/effect": "/node_modules/wc-compiler/dist/effect.js",
+ };
+ 
+ class ImportJsxResource {
