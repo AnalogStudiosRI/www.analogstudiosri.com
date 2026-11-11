@@ -9,6 +9,14 @@ interface Details {
   link: string;
 }
 
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "as-card": { details: string };
+    }
+  }
+}
+
 // TODO: should fix file hosting HTTPS at the source
 // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/19
 function modelAlbum(album: Album) {
@@ -47,16 +55,6 @@ export class CardComponent extends HTMLElement {
     }
 
     const { imagePath, imageAltText, bodyText, headingText, link } = this.#details;
-    const detailsHeadingLink = !link
-      ? headingText
-      : `
-        <a href="${link}" title="Visit ${headingText}">
-          ${headingText}
-        </a>
-      `;
-
-    // TODO: # private references don't work with WCC?
-    // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/20
     return (
       <div class="container as-card">
         <div class="row">
@@ -69,7 +67,15 @@ export class CardComponent extends HTMLElement {
                 </div>
 
                 <div class="media-body">
-                  <h3 class="media-heading">{detailsHeadingLink}</h3>
+                  <h3 class="media-heading">
+                    {link ? (
+                      <a href={link} title={`Visit ${headingText}`}>
+                        {headingText}
+                      </a>
+                    ) : (
+                      headingText
+                    )}
+                  </h3>
                   <p>{bodyText}</p>
                 </div>
               </div>

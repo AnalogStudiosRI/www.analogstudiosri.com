@@ -28,26 +28,19 @@ export default class PostsListComponent extends HTMLElement {
   render() {
     const maxDisplay = !this.#max ? this.#posts.length : this.#max;
     const maxPosts = this.#posts.slice(0, maxDisplay);
-    const html = maxPosts
-      .map((post) => {
-        const formattedDate = formatDateTime(post.createdTime);
-
-        return `
-        <div class="post">
-          <div class="post__time">Posted: ${formattedDate}</div>
-
-          <h4 class="post__heading">${post.title}</h4>
-
-          <details class="post__summary">${post.summary}</details>
-        </div>
-      `;
-      })
-      .join("");
 
     return (
       <div class="as-posts-list">
         <h3 class="as-posts-list__heading">Latest Posts</h3>
-        <div class="posts">{html}</div>
+        <div class="posts">
+          {maxPosts.map((post) => (
+            <div class="post">
+              <div class="post__time">Posted: {formatDateTime(post.createdTime)}</div>
+              <h4 class="post__heading">{post.title}</h4>
+              <details class="post__summary">{post.summary}</details>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

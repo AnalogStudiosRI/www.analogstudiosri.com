@@ -1,3 +1,455 @@
+diff --git a/node_modules/wc-compiler/src/jsx-loader.js b/node_modules/wc-compiler/src/jsx-loader.js
+index cbf5f8c..720e7bf 100644
+--- a/node_modules/wc-compiler/src/jsx-loader.js
++++ b/node_modules/wc-compiler/src/jsx-loader.js
+@@ -25,6 +25,152 @@ const acornParseOptions = {
+ // TODO: same hack as definitions
+ // https://github.com/ProjectEvergreen/wcc/discussions/74
+ let string;
++let expressions;
++let eventHandlers;
++let expressionPrefix;
++let eventPrefix;
++let eventReferencePrefix;
++
++// Keep expressions out of parse5 and Acorn's standalone statement parser, then restore their AST
++// nodes inside render(). This preserves private scope and interpolation evaluation order.
++// https://github.com/ProjectEvergreen/wcc/issues/279
++function addExpressionPlaceholder(expression) {
++  const placeholder = `${expressionPrefix}${expressions.length}__`;
++
++  expressions.push({
++    expression,
++    placeholder,
++  });
++
++  return placeholder;
++}
++
++function restoreExpressionPlaceholders(html) {
++  return expressions.reduce(
++    (result, { placeholder }) =>
++      result.replaceAll(placeholder, () => `\${${placeholder}}`),
++    html,
++  );
++}
++
++function restoreExpressionNodes(node) {
++  if (!node || typeof node !== 'object') {
++    return node;
++  }
++
++  if (node.type === 'Identifier') {
++    const replacement = expressions.find(({ placeholder }) => placeholder === node.name);
++
++    if (replacement) {
++      return replacement.expression;
++    }
++  }
++
++  for (const key of Object.keys(node)) {
++    node[key] = Array.isArray(node[key])
++      ? node[key].map(restoreExpressionNodes)
++      : restoreExpressionNodes(node[key]);
++  }
++
++  return node;
++}
++
++function hasPrivateReference(expression) {
++  return expression && typeof expression === 'object' && (
++    expression.type === 'PrivateIdentifier' ||
++    Object.values(expression).some(hasPrivateReference)
++  );
++}
++
++// A render-local alias of a private signal must still resolve to that private field in effects,
++// which run from connectedCallback rather than from render's local scope.
++function getSignalExpression(expression, aliases) {
++  const object = expression.callee.object;
++  const reference = object.type === 'Identifier' ? aliases.get(object.name) : object;
++
++  if (!reference || !hasPrivateReference(reference)) {
++    return undefined;
++  }
++
++  return {
++    ...expression,
++    callee: { ...expression.callee, object: reference },
++  };
++}
++
++// Resolve private-handler targets while compiling, using WCC's existing structural selector
++// convention. Markers never reach the emitted HTML; runtime code uses one cached reference
++// per target, just as signal effects do.
++function resolveEventTargets(tree, path = []) {
++  const counts = new Map();
++
++  for (const node of tree.childNodes ?? []) {
++    if (!node.tagName) {
++      continue;
++    }
++
++    const index = (counts.get(node.tagName) ?? 0) + 1;
++    counts.set(node.tagName, index);
++    const nodePath = [...path, `${node.tagName}:nth-of-type(${index})`];
++
++    node.attrs = node.attrs.filter(attr => {
++      const handler = eventHandlers.find(({ marker }) => marker === attr.name);
++
++      if (!handler) {
++        return true;
++      }
++
++      handler.selector = nodePath.join(' > ');
++      return false;
++    });
++
++    resolveEventTargets(node, nodePath);
++  }
++}
++
++function normalizeJsxChild(expression) {
++  const normalize = acorn.parseExpressionAt(`value => Array.isArray(value)
++    ? value.flat(Infinity).map(item => item == null || typeof item === 'boolean' ? '' : item).join('')
++    : value == null || typeof value === 'boolean' ? '' : value`, 0, acornParseOptions);
++
++  return { type: 'CallExpression', callee: normalize, arguments: [expression], optional: false };
++}
++
++// JSX can also appear in helper returns, map callbacks, and conditional expressions. Lower those
++// nodes to HTML template literals rather than leaving JSX for astring (which cannot emit it).
++function lowerNestedJsx(node, inferredObservability, hasShadowRoot) {
++  if (!node || typeof node !== 'object') {
++    return node;
++  }
++
++  if (node.type === 'JSXElement' || node.type === 'JSXFragment') {
++    const previousString = string;
++    const previousHandlers = eventHandlers;
++    string = '';
++    eventHandlers = [];
++    const html = parseJsxElement(node, '', inferredObservability, hasShadowRoot);
++
++    if (eventHandlers.length > 0) {
++      throw new Error('Private event handlers in nested JSX need per-instance DOM binding.');
++    }
++
++    const serialized = restoreExpressionPlaceholders(serialize(getParse(html)(html)));
++    const template = restoreExpressionNodes(
++      acorn.parseExpressionAt(`\`${serialized}\``, 0, acornParseOptions),
++    );
++    string = previousString;
++    eventHandlers = previousHandlers;
++    return lowerNestedJsx(template, inferredObservability, hasShadowRoot);
++  }
++
++  for (const key of Object.keys(node)) {
++    node[key] = Array.isArray(node[key])
++      ? node[key].map(child => lowerNestedJsx(child, inferredObservability, hasShadowRoot))
++      : lowerNestedJsx(node[key], inferredObservability, hasShadowRoot);
++  }
++
++  return node;
++}
+ 
+ // TODO: move to a util
+ // https://github.com/ProjectEvergreen/wcc/discussions/74
+@@ -48,6 +194,7 @@ export function getParser(moduleURL) {
+       // https://github.com/acornjs/acorn/issues/829#issuecomment-1172586171
+       ...walk.base,
+       JSXElement: () => {},
++      JSXFragment: () => {},
+     },
+   };
+ }
+@@ -109,7 +256,7 @@ function findThisReferences(context, statement) {
+ 
+       if (init.object && init.object.type === 'ThisExpression') {
+         // const { description } = this.todo;
+-        references.push(init.property.name);
++        references.push(init.property.type === 'PrivateIdentifier' ? declaration : init.property.name);
+       } else if (init.type === 'ThisExpression' && id && id.properties) {
+         // const { id, description } = this;
+         id.properties.forEach((property) => {
+@@ -138,6 +285,12 @@ function parseJsxElement(
+   try {
+     const { type } = element;
+ 
++    if (type === 'JSXFragment') {
++      element.children.forEach(child =>
++        parseJsxElement(child, moduleContents, inferredObservability, hasShadowRoot, currentDepth),
++      );
++    }
++
+     if (type === 'JSXElement') {
+       const { openingElement } = element;
+       const { attributes } = openingElement;
+@@ -155,6 +308,15 @@ function parseJsxElement(
+ 
+           // onclick={this.increment}
+           if (value.type === 'JSXExpressionContainer') {
++            if (hasPrivateReference(expression)) {
++              const marker = `${eventPrefix}${eventHandlers.length}`;
++              const placeholder = addExpressionPlaceholder(expression);
++
++              eventHandlers.push({ marker, placeholder, name: name.slice(2) });
++              string += ` ${marker}=""`;
++              continue;
++            }
++
+             if (expression.type === 'MemberExpression') {
+               if (expression.object.type === 'ThisExpression') {
+                 if (expression.property.type === 'Identifier') {
+@@ -223,17 +385,10 @@ function parseJsxElement(
+                 case 'Literal':
+                   string += ` ${name}=${expression.raw}`;
+                   break;
+-                case 'Identifier':
+-                  string += ` ${name}=$\{${expression.name}}`;
+-                  break;
+-                case 'MemberExpression':
+-                  if (expression.object.type === 'Identifier') {
+-                    if (expression.property.type === 'Identifier') {
+-                      string += ` ${name}=$\{${expression.object.name}.${expression.property.name}}`;
+-                    }
+-                  }
+-                  break;
+                 default:
++                  if (expressionType !== 'JSXEmptyExpression') {
++                    string += ` ${name}="${addExpressionPlaceholder(expression)}"`;
++                  }
+                   break;
+               }
+             }
+@@ -279,23 +434,8 @@ function parseJsxElement(
+         // https://github.com/ProjectEvergreen/wcc/issues/88
+         const { object, property } = element.expression.callee;
+         string += `$\{${object.name}.${property.name}()}`;
+-      } else if (type === 'Identifier') {
+-        // You have {count} TODOs left to complete
+-        string += `$\{${element.expression.name}}`;
+-      } else if (type === 'MemberExpression') {
+-        const { object } = element.expression.object;
+-
+-        // You have {this.todos.length} Todos left to complete
+-        // https://github.com/ProjectEvergreen/wcc/issues/88
+-        if (object && object.type === 'ThisExpression') {
+-          // TODO ReferenceError: __this__ is not defined
+-          // string += `\$\{__this__.${element.expression.object.property.name}.${element.expression.property.name}\}`;
+-        } else {
+-          // const { todos } = this;
+-          // ....
+-          // You have {todos.length} Todos left to complete
+-          string += `$\{${element.expression.object.name}.${element.expression.property.name}}`;
+-        }
++      } else if (type !== 'JSXEmptyExpression') {
++        string += addExpressionPlaceholder(normalizeJsxChild(element.expression));
+       }
+     }
+   } catch (e) {
+@@ -325,7 +465,11 @@ function generateEffectsForReactiveElements(reactiveElements) {
+     if (attributes.length > 0) {
+       const attributeUpdates = attributes
+         .map((attr) => {
+-          return `this.$el${idx}.setAttribute('${attr.name}', this.${attr.value}.get())`;
++          const value = attr.expression
++            ? addExpressionPlaceholder(attr.expression)
++            : `this.${attr.value}.get()`;
++
++          return `this.$el${idx}.setAttribute('${attr.name}', ${value})`;
+         })
+         .join('\n');
+ 
+@@ -381,6 +525,7 @@ export function parseJsx(moduleURL) {
+   let inferredObservability = false;
+   // TODO: "merge" observedAttributes tracking with constructor tracking
+   let observedAttributes = [];
++  const signalAliases = new Map();
+   let constructorMembersSignals = new Map();
+   let reactiveElements = [];
+   let componentName;
+@@ -388,6 +533,21 @@ export function parseJsx(moduleURL) {
+   let hasDisconnectedCallback;
+   let tree = acorn.Parser.extend(jsx()).parse(result.code, acornParseOptions);
+   string = '';
++  expressions = [];
++  expressionPrefix = '__WCC_JSX_EXPRESSION_';
++  eventPrefix = 'data-wcc-event-';
++  eventReferencePrefix = '$eventEl';
++
++  // Generated identifiers and DOM markers must not collide with authored source.
++  while (moduleContents.includes(expressionPrefix)) {
++    expressionPrefix += '_';
++  }
++  while (moduleContents.includes(eventPrefix)) {
++    eventPrefix += 'x-';
++  }
++  while (moduleContents.includes(eventReferencePrefix)) {
++    eventReferencePrefix += '_';
++  }
+ 
+   // initial pass to get certain information before running JSX transformations (could we do this in one pass?)
+   // 1. if `inferredObservability` is set
+@@ -443,6 +603,12 @@ export function parseJsx(moduleURL) {
+                   const n = n1.value.body.body[n2];
+ 
+                   if (n.type === 'VariableDeclaration') {
++                    for (const { id, init } of n.declarations) {
++                      if (id.type === 'Identifier' && init?.type === 'MemberExpression' &&
++                          init.object.type === 'ThisExpression') {
++                        signalAliases.set(id.name, init);
++                      }
++                    }
+                     observedAttributes = [
+                       ...observedAttributes,
+                       ...findThisReferences('render', n),
+@@ -498,6 +664,7 @@ export function parseJsx(moduleURL) {
+       ...walk.base,
+       // @ts-ignore
+       JSXElement: () => {},
++      JSXFragment: () => {},
+     },
+   );
+ 
+@@ -630,6 +797,7 @@ export function parseJsx(moduleURL) {
+                           reactiveElements[reactiveElements.length - 1].attributes.push({
+                             name: attr.name.name,
+                             value,
++                            expression: getSignalExpression(attr.value.expression, signalAliases),
+                           });
+                         }
+                       }
+@@ -670,6 +838,7 @@ export function parseJsx(moduleURL) {
+                         reactiveElements[reactiveElements.length - 1].attributes.push({
+                           name: attr.name.name,
+                           value,
++                          expression: getSignalExpression(attr.value.expression, signalAliases),
+                         });
+                       }
+                     }
+@@ -685,6 +854,7 @@ export function parseJsx(moduleURL) {
+         ...walk.base,
+         // @ts-ignore
+         JSXElement: () => {},
++        JSXFragment: () => {},
+       },
+     );
+   }
+@@ -705,6 +875,9 @@ export function parseJsx(moduleURL) {
+                   const n = n1.value.body.body[n2];
+ 
+                   if (n.type === 'ReturnStatement' && n.argument.type === 'JSXElement') {
++                    string = '';
++                    expressions = [];
++                    eventHandlers = [];
+                     const html = parseJsxElement(
+                       n.argument,
+                       moduleContents,
+@@ -716,8 +889,9 @@ export function parseJsx(moduleURL) {
+                     const elementRoot = hasShadowRoot ? 'this.shadowRoot' : 'this';
+ 
+                     applyDomDepthSubstitutions(elementTree, undefined, hasShadowRoot);
++                    resolveEventTargets(elementTree);
+ 
+-                    const serializedHtml = serialize(elementTree);
++                    const serializedHtml = restoreExpressionPlaceholders(serialize(elementTree));
+                     // we have to Shadow DOM use cases here
+                     // 1. No shadowRoot, so we attachShadow and append the template
+                     // 2. If there is root from the attachShadow signal, so we just need to inject innerHTML, say in an htmx
+@@ -736,7 +910,31 @@ export function parseJsx(moduleURL) {
+                         }
+                       `
+                       : `${elementRoot}.innerHTML = \`${serializedHtml}\`;`;
+-                    const transformed = acorn.parse(renderHandler, acornParseOptions);
++                    const targets = new Map();
++
++                    for (const handler of eventHandlers) {
++                      if (!handler.selector) {
++                        throw new Error(`Could not resolve private event target: ${handler.marker}`);
++                      }
++
++                      const handlers = targets.get(handler.selector) ?? [];
++                      handlers.push(handler);
++                      targets.set(handler.selector, handlers);
++                    }
++
++                    const listeners = [...targets].map(([selector, handlers], index) => {
++                      const reference = `this.${eventReferencePrefix}${index}`;
++
++                      return `
++                        ${reference} = ${elementRoot}.querySelector('${selector}');
++                        ${handlers.map(({ name, placeholder }) => `
++                          ${reference}?.addEventListener('${name}', event => ${placeholder}.call(this, event));
++                        `).join('\n')}
++                      `;
++                    }).join('\n');
++                    const transformed = restoreExpressionNodes(
++                      acorn.parse(renderHandler + listeners, acornParseOptions),
++                    );
+ 
+                     // @ts-ignore
+                     n1.value.body.body[n2] = transformed;
+@@ -753,6 +951,7 @@ export function parseJsx(moduleURL) {
+       ...walk.base,
+       // @ts-ignore
+       JSXElement: () => {},
++      JSXFragment: () => {},
+     },
+   );
+ 
+@@ -825,7 +1024,9 @@ export function parseJsx(moduleURL) {
+               .join('\n');
+             const effectContents = generateEffectsForReactiveElements(reactiveElements);
+             const effectElementsTree = acorn.parse(effectElements, acornParseOptions);
+-            const effectContentsTree = acorn.parse(effectContents, acornParseOptions);
++            const effectContentsTree = restoreExpressionNodes(
++              acorn.parse(effectContents, acornParseOptions),
++            );
+ 
+             node.value.body.body = [
+               ...node.value.body.body,
+@@ -849,6 +1050,7 @@ export function parseJsx(moduleURL) {
+         ...walk.base,
+         // @ts-ignore
+         JSXElement: () => {},
++        JSXFragment: () => {},
+       },
+     );
+ 
+@@ -859,7 +1061,7 @@ export function parseJsx(moduleURL) {
+     tree.body = [...effectImportTree.body, ...tree.body];
+   }
+ 
+-  return tree;
++  return lowerNestedJsx(tree, inferredObservability, hasShadowRoot);
+ }
+ 
+ // --------------
+diff --git a/node_modules/wc-compiler/src/jsx.d.ts b/node_modules/wc-compiler/src/jsx.d.ts
+index 4d6ee0b..85bf92d 100644
+--- a/node_modules/wc-compiler/src/jsx.d.ts
++++ b/node_modules/wc-compiler/src/jsx.d.ts
+@@ -41,7 +41,8 @@ type PopoverAttributes = {
+ type IntrinsicElementsFromDom = {
+   [E in keyof HTMLElementTagNameMap]: ElementAttributes<HTMLElementTagNameMap[E]> &
+     (E extends 'button' | 'input' ? PopoverAttributes : {}) &
+-    (E extends 'button' ? { tabindex?: number | string } : {});
++    (E extends 'button' ? { tabindex?: number | string } : {}) &
++    (E extends 'meta' ? { property?: string } : {});
+ };
+ 
+ // map each SVG tag to its attributes
+@@ -52,7 +53,8 @@ type IntrinsicElementsFromSVG = {
+ type IntrinsicElementAttributes<E extends string> = (E extends keyof HTMLElementTagNameMap
+   ? ElementAttributes<HTMLElementTagNameMap[E]> &
+       (E extends 'button' | 'input' ? PopoverAttributes : {}) &
+-      (E extends 'button' ? { tabindex?: number | string } : {})
++      (E extends 'button' ? { tabindex?: number | string } : {}) &
++      (E extends 'meta' ? { property?: string } : {})
+   : {}) &
+   (E extends keyof SVGElementTagNameMap ? SVGElementAttributes<SVGElementTagNameMap[E]> : {});
+ 
 diff --git a/node_modules/wc-compiler/src/wcc.js b/node_modules/wc-compiler/src/wcc.js
 index 3aed9a2..5502533 100644
 --- a/node_modules/wc-compiler/src/wcc.js

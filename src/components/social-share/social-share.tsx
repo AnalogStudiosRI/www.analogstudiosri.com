@@ -14,15 +14,15 @@ declare global {
   namespace JSX {
     interface IntrinsicElements {
       "as-social-share": {
-        show: boolean;
-        share: ShareConfig;
+        show?: boolean;
+        share?: ShareConfig;
       };
     }
   }
 }
 
 export default class SocialShare extends HTMLElement {
-  show: SignalInterface.State<boolean>;
+  #show: SignalInterface.State<boolean>;
   #shareConfig: ShareConfig;
 
   constructor() {
@@ -30,9 +30,7 @@ export default class SocialShare extends HTMLElement {
 
     const socialShareUrl = typeof window !== "undefined" ? window.location.href : "";
 
-    // TODO: see if we can support this a private member with WCC
-    // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/20
-    this.show = new Signal.State(false);
+    this.#show = new Signal.State(false);
     this.#shareConfig = {
       displayNames: true,
       config: [
@@ -81,24 +79,24 @@ export default class SocialShare extends HTMLElement {
         // https://github.com/peterpeterparker/web-social-share/issues/65
         shareElement.share = this.#shareConfig;
         shareElement.addEventListener("closed", () => {
-          this.show.set(false);
+          this.#show.set(false);
         });
       }, 1000);
     }
   }
 
-  toggleShowSocialShare() {
-    this.show.set(!this.show.get());
+  #toggleShowSocialShare() {
+    this.#show.set(!this.#show.get());
   }
 
   render() {
-    const { show } = this;
+    const show = this.#show;
 
     return (
       <div>
         <h2 class="header">Interact + Share</h2>
 
-        <button type="button" class="btn" onclick={this.toggleShowSocialShare}>
+        <button type="button" class="btn" onclick={this.#toggleShowSocialShare}>
           <svg
             class="svg-inline--fa fa-share-alt fa-w-14"
             aria-hidden="true"

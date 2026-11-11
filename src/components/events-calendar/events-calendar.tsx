@@ -109,57 +109,17 @@ export class EventsCalendarComponent extends HTMLElement {
     });
   }
 
-  // TODO: private methods are not supported by WCC <> JSX event handlers
-  // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/20
   shiftToPreviousMonth(): void {
     this.#calculatePreviousMonth();
     this.render();
   }
 
-  // TODO: private methods are not supported by WCC <> JSX event handlers
-  // https://github.com/AnalogStudiosRI/www.analogstudiosri.com/issues/20
   shiftToNextMonth(): void {
     this.#calculateNextMonth();
     this.render();
   }
 
   render() {
-    const html = this.#currentMonthData
-      .map((week) => {
-        return `
-        <div class="as-events-calendar__week">
-          ${week.map((day) => {
-            const dayNotInMonthContent = !day.date ? "<div></div>" : "";
-            const dayInMonthContent = day.date && !day.hasEvents ? day.date : "";
-            const eventsInDayContent = day.hasEvents
-              ? day.events.map((event) => {
-                  return `
-                    <span class="as-events-calendar__day-event">
-                      <a class="as-events-calendar__day-event" href="/events/${slugifyer(event.title)}/" title="${event.title}">
-                        <i class="fa fa-calendar-check-o"></i>
-                      </a>
-                    </span>
-                  `;
-                })
-              : "";
-
-            return `
-                <div class="as-events-calendar__day">
-                  <!--day not in month-->
-                  ${dayNotInMonthContent}
-
-                  <!--day in month without event-->
-                  ${dayInMonthContent}
-
-                  <!--day with event if there's an event-->
-                  ${eventsInDayContent}
-                </div>
-              `;
-          })}
-        </div>
-      `;
-      })
-      .join("");
     const headerText = this.#getHeaderText();
 
     return (
@@ -202,7 +162,29 @@ export class EventsCalendarComponent extends HTMLElement {
           <div class="as-events-calendar__day-name">Sat</div>
         </div>
 
-        {html}
+        {this.#currentMonthData.map((week) => (
+          <div class="as-events-calendar__week">
+            {week.map((day) => (
+              <div class="as-events-calendar__day">
+                {!day.date ? <div></div> : null}
+                {day.date && !day.hasEvents ? day.date : null}
+                {day.hasEvents
+                  ? day.events.map((event) => (
+                      <span class="as-events-calendar__day-event">
+                        <a
+                          class="as-events-calendar__day-event"
+                          href={`/events/${slugifyer(event.title)}/`}
+                          title={event.title}
+                        >
+                          <i class="fa fa-calendar-check-o"></i>
+                        </a>
+                      </span>
+                    ))
+                  : null}
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     );
   }
