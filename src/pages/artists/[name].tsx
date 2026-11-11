@@ -52,52 +52,55 @@ export default class ArtistDetailsPage extends HTMLElement {
     if (this.#albums?.length === 0) {
       return "";
     } else {
-      return `
-        <h2>Albums by ${this.#artist.name}</h2>
-
-        ${this.#albums
-          .map((album: Album) => {
-            const detailsJson = JSON.stringify(modelAlbum(album));
-            const escaped = escapeHtmlAttribute(detailsJson);
-            return `<as-card details="${escaped}"></as-card>`;
-          })
-          .join("\n")}
-      `;
+      return (
+        <>
+          <h2>Albums by {this.#artist.name}</h2>
+          {this.#albums.map((album) => (
+            <as-card details={escapeHtmlAttribute(JSON.stringify(modelAlbum(album)))}></as-card>
+          ))}
+        </>
+      );
     }
   }
 
   connectedCallback() {
+    this.render();
+  }
+
+  render() {
     // don't need links on details pages
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { link, ...rest } = modelArtist(this.#artist);
 
-    this.innerHTML = `
-      <head>
-        <title>Analog Studios RI - ${this.#artist.name}</title>
-        <meta property="og:title" content="Analog Studios RI - ${this.#artist.name}" />
-        <meta name="description" content="${this.#artist.bio}"/>
-      </head>
-      <body>
-        <div class="container-flex as-route-artist-details">
-          <div class="row details-row hidden-sm-down">
-            <div class="col-xs-4">
-              <as-social-share></as-social-share>
+    return (
+      <html>
+        <head>
+          <title>Analog Studios RI - {this.#artist.name}</title>
+          <meta property="og:title" content={`Analog Studios RI - ${this.#artist.name}`} />
+          <meta name="description" content={this.#artist.bio} />
+        </head>
+        <body>
+          <div class="container-flex as-route-artist-details">
+            <div class="row details-row hidden-sm-down">
+              <div class="col-xs-4">
+                <as-social-share></as-social-share>
+              </div>
+
+              <div class="col-xs-8 details-card">
+                <as-card details={escapeHtmlAttribute(JSON.stringify(rest))}></as-card>
+              </div>
             </div>
 
-            <div class="col-xs-8 details-card">
-              <as-card details="${escapeHtmlAttribute(JSON.stringify(rest))}"></as-card>
+            <div class="card-row hidden-md-up mobile-container">
+              <h4>{this.#artist.name}</h4>
+              <img class="mobile-image" src={this.#artist.imageUrl} alt={this.#artist.name} />
+              <p>{this.#artist.bio}</p>
             </div>
-          </div>
 
-          <div class="card-row hidden-md-up mobile-container">
-            <h4>${this.#artist.name}</h4>
-            <img class="mobile-image" src="${this.#artist.imageUrl}" alt="${this.#artist.name}"/>
-            <p>${this.#artist.bio}</p>
+            {this.#getAlbumsForArtist()}
           </div>
-
-          ${this.#getAlbumsForArtist()}
-        </div>
-      </body>
-    `;
+        </body>
+      </html>
+    );
   }
 }

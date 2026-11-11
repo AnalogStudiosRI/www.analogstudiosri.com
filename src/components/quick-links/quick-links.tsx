@@ -2,7 +2,7 @@ declare global {
   namespace JSX {
     interface IntrinsicElements {
       "as-quick-links": {
-        links: Link[];
+        links: string;
         label: string;
       };
     }
@@ -45,15 +45,12 @@ export default class QuickLinks extends HTMLElement {
 
   render() {
     const { links } = this;
-    const optionsListHtml = [{ route: "default", label: this.label }, ...links]
-      .map((link) => {
-        return `<option value="${link.route}">${link.label}</option>`;
-      })
-      .join("\n");
 
     return (
       <select name="quick-links-dropdown" onchange={this.selectOption}>
-        {optionsListHtml}
+        {[{ route: "default", label: this.label }, ...links].map((link) => (
+          <option value={link.route}>{link.label}</option>
+        ))}
       </select>
     );
   }
